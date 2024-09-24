@@ -1,7 +1,15 @@
 use std::{fmt};
 use Piece::*;
+mod board_position;
+use board_position::*;
+mod moveset;
+use moveset::*;
+mod board;
+use board::*;
+mod tests;
 
 const MAX_STEPS: u8 = 100;
+const BOARD_SIZE: usize = 8;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum GameState {
@@ -16,17 +24,17 @@ pub enum Color {
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Piece {
-    Pawn(Color),
-    Knight(Color),
-    King(Color),
-    Queen(Color),
-    Bishop(Color),
-    Rook(Color),
+    Pawn,
+    Knight,
+    King,
+    Queen,
+    Bishop,
+    Rook,
 }
 
 impl Piece {
     /// Returns a char based on the color and class of the piece
-    pub fn to_char(&self) -> char {
+    pub fn to_char(&self, color: &Color) -> char {
         /// Makes the char uppercase if white, lowercase if black, if it errors. f will be returned
         fn color_case(char: char, color: &Color) -> char {
             match color {
@@ -37,67 +45,13 @@ impl Piece {
 
         // matches the colored piece to the right char 
         match self {
-            Pawn(c) => color_case('p', c),
-            Knight(c) => color_case('n', c),
-            King(c) => color_case('k', c),
-            Queen(c) => color_case('q', c),
-            Bishop(c) => color_case('b', c),
-            Rook(c) => color_case('r', c),
+            Pawn => color_case('p', color),
+            Knight => color_case('n', color),
+            King => color_case('k', color),
+            Queen => color_case('q', color),
+            Bishop => color_case('b', color),
+            Rook => color_case('r', color),
         }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash)]
-pub struct Position {
-    pub x: usize,
-    pub y: usize
-}
-
-impl Position {
-    pub fn new(x: usize, y: usize) -> Self {
-        Position {
-            x,
-            y
-        }
-    }
-}
-
-impl From<usize> for Position {
-    fn from(value: usize ) -> Self {
-        Position {
-            x: value,
-            y: value
-        }
-    }
-}
-
-impl From<&str> for Position {
-    fn from(value: &str) -> Self {
-
-        let x = value.chars().next().unwrap_or('Ö');
-        let y = value.chars().next().unwrap_or('Ö');
-
-        fn char_to_num(c: char) -> usize {
-            match c.to_uppercase().next().unwrap_or('Ö') {
-                'A' => 1,
-                'B' => 2,
-                'C' => 3,
-                'D' => 4,
-                'E' => 5,
-                'F' => 6,
-                'G' => 7,
-                'H' => 8,
-                _ => 0
-            }
-        }
-
-        Position::new(char_to_num(x), char_to_num(y))
-    }
-}
-
-impl From<(usize, usize)> for Position {
-    fn from(value: (usize, usize))-> Self {
-        Position::new(value.0, value.1)
     }
 }
 
@@ -108,56 +62,6 @@ enum ChessError {
     NoPiece
 }
 
-/// Board
-#[derive(Debug)]
-pub struct Board {
-    position_array: [[Option<Piece>; 8]; 8],
-}
-
-impl Board {
-    fn new() -> Board {
-        Board {
-            position_array: [[None; 8]; 8],
-        }
-    }
-
-    /// returns a reference to the piece in the specified position
-    fn get_piece(&self, position: &Position) -> Option<Piece> {
-        self.position_array[position.y-1][position.x-1]
-    }
-
-    ///Spawns the specified piece in the specified position
-    fn spawn_piece(&mut self, piece: Piece, position: &Position) -> Result<(), ChessError> {
-        if self.get_piece(position).is_some() {
-            return Err(ChessError::IllegalSpawn);
-        }
-
-        self.position_array[position.y-1][position.x-1] = Some(piece);
-        Ok(())
-    }
-
-    ///Removes the piece from the specified location
-    fn despawn_piece(&mut self, position: Position) {
-        self.position_array[position.y-1][position.x-1] = None;
-    }
-
-    fn clear(&mut self) {
-        self.position_array = [[None; 8];8]
-    }
-}
-
-///Moveset
-
-pub struct Moveset {
-    piece: Piece,
-    max_steps: usize,
-    translations: Vec<Piece>
-}
-
-impl Moveset {
-
-}
-
 
 ///Game
 pub struct Game {
@@ -165,7 +69,6 @@ pub struct Game {
     state: GameState,
     turn: Color,
     board: Board,
-    movesets: Vec<Moveset>
 }
 
 impl Game {
@@ -183,7 +86,6 @@ impl Game {
             state: GameState::InProgress,
             turn: Color::White,
             board: Board::new(),
-            movesets: vec![],
         }
     }
 
@@ -192,75 +94,69 @@ impl Game {
         // Vita pjäser
         //TODO: Handle results
         let color = Color::White;
-        let mut position = Position::new(1, 8);
+        let mut position = BoardPosition::from_num(0, 7);
         let piece_array = [
-            Rook(color),
-            Knight(color),
-            Bishop(color),
-            King(color),
-            Queen(color),
-            Bishop(color),
-            Knight(color),
-            Rook(color),
+            Rook,
+            Knight,
+            Bishop,
+            King,
+            Queen,
+            Bishop,
+            Knight,
+            Rook,
         ];
 
         // Vita coola grabbar
         for p in piece_array {
-            self.board.spawn_piece(p, &position).expect("Could not spawn piece");
-            position.x += 1;
+            self.board.spawn_piece(p, color,&position).expect("Could not spawn piece");
+            //position.x += 1;
+            position.x = Rank::from(usize::from(position.x) + 1);
         }
         // Flytta ned ett steg
-        position = Position::new(1, 7);
+        position = BoardPosition::from_num(0, 6);
 
         // Vita bondlurkar
         for _ in 1..=8 {
-            self.board.spawn_piece(Pawn(color), &position).expect("Could not spawn piece");
-            position.x += 1
+            self.board.spawn_piece(Pawn, color, &position).expect("Could not spawn piece");
+            //position.x += 1
+            position.x = Rank::from(usize::from(position.x) + 1);
         }
 
         let color = Color::Black;
-        position = Position::from(1);
-        // Shadow array to change the color
-        let piece_array = [
-            Rook(color),
-            Knight(color),
-            Bishop(color),
-            King(color),
-            Queen(color),
-            Bishop(color),
-            Knight(color),
-            Rook(color),
-        ];
+        position = BoardPosition::from_num(0,0);
 
         // Svarta coolingar
         for p in piece_array {
-            self.board.spawn_piece(p, &position).expect("Could not spawn piece");
-            position.x += 1
+            self.board.spawn_piece(p, color, &position).expect("Could not spawn piece");
+            //position.x += 1
+            position.x = Rank::from(usize::from(position.x) + 1);
         }
 
         // Flytta upp ett steg
-        position = Position::new(1, 2);
+        position = BoardPosition::from_num(0, 1);
 
         // svarta bondlurkar
         for _ in 1..=8 {
-            self.board.spawn_piece(Pawn(color), &position).expect("Could not spawn piece");
-            position.x += 1
+            self.board.spawn_piece(Pawn, color, &position).expect("Could not spawn piece");
+            //position.x += 1
+            position.x = Rank::from(usize::from(position.x) + 1);
         }
     }
 
     /// If the current game state is InProgress and the move is legal,
     /// move a piece and return the resulting state of the game.
-    pub fn make_move(&mut self, from: &Position, to: &Position) -> Result<GameState, ChessError> {
+    pub fn move_piece(&mut self, from: &BoardPosition, to: &BoardPosition) -> Result<GameState, ChessError> {
+        //Get the pseudolegal moves for the piece
+        if let Some((piece, color)) =  self.board.get_piece(from) {
+            let moveset = moveset::get_moveset(piece, Some(color));
+            
 
-        
-        if let Some(piece) =  self.board.get_piece(from) {
-            // get the moves for the piece
 
-            // Create a moveset struct that has a piece and an array of positions the piece can add to its current position.
-            // Also could contain any special functions, for king and pawn
-            // Also maybe a max_length. or max_steps
-
+        } else {
+            return Err(ChessError::NoPiece)
         }
+        //Use the pseudolegal moves for the piece to get the legal moves (dont forget to check check)
+        //If to is a position to move to then move then remove any eventual piece that is there, track it, and move the piece there
 
         Err(ChessError::IllegalMove)
     }
@@ -279,7 +175,18 @@ impl Game {
     /// new positions of that piece. Don't forget the rules for check.
     ///
     /// (optional) Don't forget to include en passent and castling.
-    pub fn get_possible_moves(&self, postion: Position) -> Option<Vec<String>> {
+    pub fn get_possible_moves(&self, postion: &BoardPosition) -> Option<Vec<BoardPosition>> {
+        if let Some(piece_color_pair) =  self.board.get_piece(postion) {
+            // get the moves for the piece
+            let moveset = get_moveset(piece_color_pair.0, Some(piece_color_pair.1));
+            
+            let legal_moves: Vec<moveset::Move> = vec![];
+            // get the legal moves for the piece based on the board
+            for psuedo_legal_move in moveset.translations {
+                
+            }
+
+        }
         None
     }
 }
@@ -308,7 +215,7 @@ impl fmt::Debug for Game {
         for col in self.board.position_array { 
             for piece in col {
                 if piece.is_some() {
-                    let c = piece.unwrap().to_char();
+                    let c = piece.unwrap().0.to_char(&piece.unwrap().1);
                     write!(f, "{c}");
                 } else {
                     write!(f, "*");
@@ -324,46 +231,3 @@ impl fmt::Debug for Game {
 // --------------------------
 // ######### TESTS ##########
 // --------------------------
-
-#[cfg(test)]
-mod tests {
-    use crate::Color;
-    use crate::Position;
-
-    use super::Game;
-    use super::GameState;
-
-    // check test framework
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-
-    // example test
-    // check that game state is in progress after initialisation
-    #[test]
-    fn game_in_progress_after_init() {
-        let game = Game::new();
-
-        println!("{:?}", game);
-
-        assert_eq!(game.get_game_state(), GameState::InProgress);
-    }
-
-    #[test]
-    fn white_is_first() {
-        let game = Game::new();
-
-        assert_eq!(game.turn, Color::White);
-    }
-
-    #[test]
-    fn turn_is_changed_after_move() {
-        let mut game = Game::new();
-
-        println!("{:?}", game);
-
-        game.make_move(&Position::from("E7"), &Position::from("E6")).expect("Expected to move pawn from E7 to E6");
-
-    }
-}
