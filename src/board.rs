@@ -1,64 +1,63 @@
-use fmt::write;
-
 use crate::*;
+const BOARD_SIZE: usize = 8;
 /// Board
 /// Board is the struct for raw board util behaviour such as placing pieces, removing pieces, getting pieces.
 #[derive(Debug)]
 pub struct Board {
-    pub position_array: [[Option<(Piece, Color)>; BOARD_SIZE]; BOARD_SIZE],
+    pub piece_array: [[Option<Piece>; BOARD_SIZE]; BOARD_SIZE],
 }
 // Board has a 2D array that is first indexed by the rank then the file.
 // This is so that I can loop through a whole row, instead of columns.
 impl Board {
     pub fn new() -> Board {
         Board {
-            position_array: [[None; BOARD_SIZE]; BOARD_SIZE],
+            piece_array: [[None; BOARD_SIZE]; BOARD_SIZE],
         }
     }
 
     /// returns a reference to the piece in the specified position
-    pub fn get_piece_ref(&self, position: &BoardPosition) -> &Option<(Piece, Color)> {
-        &self.position_array[usize::from(position.x)][usize::from(position.y)]
+    pub fn get_piece_ref(&self, position: &Position) -> &Option<Piece> {
+        &self.piece_array[position.y][position.x]
     }
 
-    pub fn get_piece(&self, position: &BoardPosition) -> Option<(Piece, Color)> {
-        self.position_array[usize::from(position.x)][usize::from(position.y)]
+    pub fn get_piece(&self, position: &Position) -> Option<Piece> {
+        self.piece_array[position.y][position.x]
     }
 
-    ///Spawns the specified piece in the specified position, 
+    /// Spawns the specified piece in the specified position, 
     /// gives a result that holds a ChessError if there is already a piece in that posistion.
     /// Use set_piece if you dont want this chesserror behaviour
-    pub fn spawn_piece(&mut self, piece: Piece, color: Color,  position: &BoardPosition) -> Result<(), ChessError> {
+    pub fn spawn_piece(&mut self, piece: Piece, position: &Position) -> Result<(), ChessError> {
         if self.get_piece(position).is_some() {
             return Err(ChessError::IllegalSpawn);
         }
 
-        self.set_piece(piece, color, position);
+        self.set_piece(piece, position);
         Ok(())
     }
 
-    pub fn set_piece(&mut self, piece: Piece, color: Color, position: &BoardPosition) -> &Option<(Piece, Color)> {
-        self.position_array[usize::from(position.x)][usize::from(position.y)] = Some((piece, color));
+    pub fn set_piece(&mut self, piece: Piece, position: &Position) -> &Option<Piece> {
+        self.piece_array[position.y][position.x] = Some(piece);
         self.get_piece_ref(position)
     }
 
     ///Removes the piece from the specified location
-    pub fn despawn_piece(&mut self, position: BoardPosition) {
-        self.position_array[usize::from(position.x)][usize::from(position.y)] = None;
+    pub fn despawn_piece(&mut self, position: Position) {
+        self.piece_array[position.y][position.x] = None;
     }
 
     pub fn clear(&mut self) {
-        self.position_array = [[None; 8];8]
+        self.piece_array = [[None; BOARD_SIZE]; BOARD_SIZE]
     }
 }
 
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (ra, rank) in self.position_array.iter().enumerate() {
+        for (y, rank) in self.piece_array.iter().enumerate() {
             write!(f, "\n");
-            for (fi, file) in rank.iter().enumerate() {
-                let bp = BoardPosition::from_usize(ra, fi);
-                write!(f, " {bp:?}");
+            for (x, _file) in rank.iter().enumerate() {
+                let pos: BoardPosition = Position::new(x, y).unwrap().into();
+                write!(f, " {pos:?}");
             }
         }
         write!(f, "\n")

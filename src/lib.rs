@@ -8,7 +8,6 @@ pub mod board;
 use board::*;
 
 const MAX_STEPS: u8 = 100;
-const BOARD_SIZE: usize = 8;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum GameState {
@@ -21,19 +20,29 @@ pub enum Color {
     White,
     Black,
 }
+
+impl Color {
+    fn other(&self) -> Self {
+        match self {
+            Self::Black => Self::White,
+            Self::White => Self::Black
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Piece {
-    Pawn,
-    Knight,
-    King,
-    Queen,
-    Bishop,
-    Rook,
+    Pawn(Color),
+    Knight(Color),
+    King(Color),
+    Queen(Color),
+    Bishop(Color),
+    Rook(Color),
 }
 
 impl Piece {
     /// Returns a char based on the color and class of the piece
-    pub fn to_char(&self, color: &Color) -> char {
+    pub fn char(&self) -> char {
         /// Makes the char uppercase if white, lowercase if black, if it errors. f will be returned
         fn color_case(char: char, color: &Color) -> char {
             match color {
@@ -44,12 +53,12 @@ impl Piece {
 
         // matches the colored piece to the right char 
         match self {
-            Pawn => color_case('p', color),
-            Knight => color_case('n', color),
-            King => color_case('k', color),
-            Queen => color_case('q', color),
-            Bishop => color_case('b', color),
-            Rook => color_case('r', color),
+            Pawn(color) => color_case('p', color),
+            Knight(color) => color_case('n', color),
+            King(color) => color_case('k', color),
+            Queen(color) => color_case('q', color),
+            Bishop(color) => color_case('b', color),
+            Rook(color) => color_case('r', color),
         }
     }
 }
@@ -94,47 +103,57 @@ impl Game {
         // Vita pjäser
         //TODO: Handle results
         let color = Color::White;
-        let mut position = BoardPosition::from_usize(0, 7);
+        let mut position = Position::new(0, 7).unwrap();
         let piece_array = [
-            Rook,
-            Knight,
-            Bishop,
-            King,
-            Queen,
-            Bishop,
-            Knight,
-            Rook,
+            Rook(color),
+            Knight(color),
+            Bishop(color),
+            King(color),
+            Queen(color),
+            Bishop(color),
+            Knight(color),
+            Rook(color),
         ];
 
         // Vita coola grabbar
         for p in piece_array {
-            self.board.spawn_piece(p, color,&position).expect("Could not spawn piece");
+            self.board.spawn_piece(p,&position).expect("Could not spawn piece");
             position.x += 1;
         }
         // Flytta ned ett steg
-        position = BoardPosition::from_usize(0, 6);
+        position = Position::new(0, 6).unwrap();
 
         // Vita bondlurkar
         for _ in 1..=8 {
-            self.board.spawn_piece(Pawn, color, &position).expect("Could not spawn piece");
+            self.board.spawn_piece(Pawn(color), &position).expect("Could not spawn piece");
             position.x += 1
         }
 
         let color = Color::Black;
-        position = BoardPosition::from_usize(0,0);
+        position = Position::new(0, 0).unwrap();
+        let piece_array = [
+            Rook(color),
+            Knight(color),
+            Bishop(color),
+            King(color),
+            Queen(color),
+            Bishop(color),
+            Knight(color),
+            Rook(color)
+        ];
 
         // Svarta coolingar
         for p in piece_array {
-            self.board.spawn_piece(p, color, &position).expect("Could not spawn piece");
+            self.board.spawn_piece(p, &position).expect("Could not spawn piece");
             position.x += 1
         }
 
         // Flytta upp ett steg
-        position = BoardPosition::from_usize(0, 1);
+        position = Position::new(0, 1).unwrap();
 
         // svarta bondlurkar
         for _ in 1..=8 {
-            self.board.spawn_piece(Pawn, color, &position).expect("Could not spawn piece");
+            self.board.spawn_piece(Pawn(color), &position).expect("Could not spawn piece");
             position.x += 1
         }
     }
@@ -161,35 +180,35 @@ impl Game {
     /// (optional) Don't forget to include en passent and castling.
     pub fn get_possible_moves(&self, position: &BoardPosition) -> Option<Vec<BoardPosition>> {
         //Get the piece
-        if let Some((piece, color)) =  self.board.get_piece(position) {
-           let moveset = moveset::get_moveset(piece, Some(color));
+        // if let Some((piece, color)) =  self.board.get_piece(position) {
+        //    let moveset = moveset::get_moveset(piece, Some(color));
 
-           let mut legal_moves: Vec<BoardPosition> = vec![];
-           for move_action in moveset.moves.into_iter() {
+        //    let mut legal_moves: Vec<BoardPosition> = vec![];
+        //    for move_action in moveset.moves.into_iter() {
 
-            'step: for step in 1..=moveset.steps {
-                println!("Step: {step}");
-                //Check to see if there is a piece on this place
-                let next_step = move_action.get_position(position, step);
-                println!("Position: {:?}", next_step);
-                if let Some((_p, c)) = self.board.get_piece(&next_step) {
-                    println!("{c:?}");
-                    println!("{_p:?}");
-                    if c == color {
-                        break 'step;
-                    } else {
-                        //push then break
-                        legal_moves.push(next_step);
-                        break 'step;
-                    }
-                } else {
-                    //Push this step
-                    legal_moves.push(next_step);
-                }
-            }
-           }
-           return Some(legal_moves);
-        }
+        //     'step: for step in 1..=moveset.steps {
+        //         println!("Step: {step}");
+        //         //Check to see if there is a piece on this place
+        //         let next_step = move_action.get_position(position, step);
+        //         println!("Position: {:?}", next_step);
+        //         if let Some((_p, c)) = self.board.get_piece(&next_step) {
+        //             println!("{c:?}");
+        //             println!("{_p:?}");
+        //             if c == color {
+        //                 break 'step;
+        //             } else {
+        //                 //push then break
+        //                 legal_moves.push(next_step);
+        //                 break 'step;
+        //             }
+        //         } else {
+        //             //Push this step
+        //             legal_moves.push(next_step);
+        //         }
+        //     }
+        //    }
+        //    return Some(legal_moves);
+        // }
         None
     }
 }
@@ -212,21 +231,16 @@ impl Game {
 ///      A  B  C  D  E  F  G  H   (x)
 impl fmt::Debug for Game {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        /* build board representation string */
-
-        write!(f, "\n");
-        for row in self.board.position_array { 
-            for piece in row {
-                if piece.is_some() {
-                    let c = piece.unwrap().0.to_char(&piece.unwrap().1);
-                    write!(f, "{c} ");
+        for (_y, rank) in self.board.piece_array.iter().enumerate() {
+            write!(f, "\n");
+            for (_x, p) in rank.iter().enumerate() {
+                if let Some(piece) = p {
+                    write!(f, " {piece:?}");
                 } else {
-                    write!(f, "* ");
+                    write!(f, " *");
                 }
             }
-            write!(f, "\n");
         }
-
         write!(f, "\n")
     }
 }

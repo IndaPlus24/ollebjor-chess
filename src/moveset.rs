@@ -5,7 +5,7 @@ use Move::*;
 pub struct Moveset {
     pub moves: Vec<Move>,
     pub steps: usize,
-    pub collide: bool
+    pub jumps: bool
 }
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub enum Move {
@@ -21,42 +21,43 @@ pub enum Move {
 }
 
 impl Move {
-    pub fn get_position(&self, position: &BoardPosition, steps: usize) -> BoardPosition {
-        let x = usize::from(position.x);
-        let y = usize::from(position.y);
+    pub fn get_position(&self, position: &Position, steps: usize) -> Position {
+        let x = position.x;
+        let y = position.y;
         let (max, min) = (7usize, 0usize);
-        match self {
-           Up => BoardPosition::from_usize(x, (y+steps).clamp(min, max)),
-           Down => BoardPosition::from_usize(x, (y-steps).clamp(min, max)),
-           Right => BoardPosition::from_usize((x+steps).clamp(min, max), y),
-           Left => BoardPosition::from_usize((x-steps).clamp(min, max), y),
-           UpRight => BoardPosition::from_usize((x+steps).clamp(min, max), (y+steps).clamp(min, max)),
-           UpLeft => BoardPosition::from_usize((x-steps).clamp(min, max), (y+steps).clamp(min, max)),
-           DownRight => BoardPosition::from_usize((x+steps).clamp(min, max), (y-steps).clamp(min, max)),
-           DownLeft => BoardPosition::from_usize((x-steps).clamp(min, max), (y-steps).clamp(min, max)),
+        let pos = match self {
+           Up => Position::new(x, (y+steps).clamp(min, max)),
+           Down => Position::new(x, (y-steps).clamp(min, max)),
+           Right => Position::new((x+steps).clamp(min, max), y),
+           Left => Position::new((x-steps).clamp(min, max), y),
+           UpRight => Position::new((x+steps).clamp(min, max), (y+steps).clamp(min, max)),
+           UpLeft => Position::new((x-steps).clamp(min, max), (y+steps).clamp(min, max)),
+           DownRight => Position::new((x+steps).clamp(min, max), (y-steps).clamp(min, max)),
+           DownLeft => Position::new((x-steps).clamp(min, max), (y-steps).clamp(min, max)),
            Forward(color) => {
             match color {
-                Color::Black => BoardPosition::from_usize(x, (y-steps).clamp(min, max)),
-                Color::White => BoardPosition::from_usize(x, (y+steps).clamp(min, max))
+                Color::Black => Position::new(x, (y-steps).clamp(min, max)),
+                Color::White => Position::new(x, (y+steps).clamp(min, max))
             }
            }
-       }
+        };
+        pos.unwrap()
     }
 }
 
 impl Moveset {
-    pub fn new(steps: usize, moves: Vec<Move>, collide: bool) -> Self {
+    pub fn new(steps: usize, moves: Vec<Move>, jumps: bool) -> Self {
         Moveset {
             steps,
             moves,
-            collide,
+            jumps,
         }
     }
 }
 
-pub fn get_moveset(piece: Piece, color: Option<Color>) -> Moveset {
+pub fn get_moveset(piece: Piece) -> Moveset {
     match piece {
-        Pawn => Moveset::new(1, vec![Forward(color.expect("expected color for pawn"))], true),
+        Pawn(c) => Moveset::new(1, vec![Forward(c)], true),
         _ => Moveset::new(0, vec![], false),
     }
 }

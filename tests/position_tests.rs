@@ -1,5 +1,4 @@
-use olle_chess::*;
-
+use olle_chess::position::*;
 //ChatGPT wrote these tests to test Position, BoardPosition, File and Rank functionality
 
 #[test]
@@ -18,7 +17,7 @@ fn test_rank_conversion_from_usize() {
 #[test]
 #[should_panic]
 fn test_rank_conversion_invalid_usize() {
-    Rank::from(8);  // This should panic
+    let _ = Rank::from(8);  // This should panic
 }
 
 #[test]
@@ -36,7 +35,7 @@ fn test_file_conversion_from_usize() {
 #[test]
 #[should_panic]
 fn test_file_conversion_invalid_usize() {
-    File::from(8);  // This should panic
+    let _ = File::from(8);  // This should panic
 }
 
 #[test]
