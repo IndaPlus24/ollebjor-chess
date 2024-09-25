@@ -1,11 +1,5 @@
-use std::result;
-
-use crate::Game;
-use crate::GameState;
-use crate::BoardPosition;
-use crate::Rank;
-use crate::File;
-use crate::Color;
+use olle_chess::*;
+use board_position::*;
 
 // check test framework
 #[test]
@@ -34,10 +28,26 @@ fn white_is_first() {
 #[test]
 fn board_position_from_rank_and_file() {
     let bp1 = BoardPosition::new(Rank::D, File::Eight);
-    let bp2 = BoardPosition::from_num(3, 7);
+    let bp2 = BoardPosition::from_usize(3, 7);
     println!("{:?},{:?}", bp1, bp2);
     assert_eq!(bp1,bp2);
 
+}
+
+#[test]
+fn move_set_is_some() {
+    let game = Game::new();
+
+    let bp1 = BoardPosition::new(Rank::B, File::Seven);
+
+    let moves = game.get_possible_moves(&bp1);
+
+    if let Some(m) = moves {
+        println!("{m:?}");
+        assert!(true);
+    } else {
+        assert!(false);
+    }
 }
 
 #[test]
@@ -45,7 +55,7 @@ fn pawn_can_move() {
     let mut game = Game::new();
 
     let bp1 = BoardPosition::new(Rank::C, File::Seven);
-    let bp2 = BoardPosition::from_num(2, 5);
+    let bp2 = BoardPosition::from_usize(2, 5);
 
     let pawn = game.board.get_piece_ref(&bp1).unwrap();
     

@@ -1,4 +1,4 @@
-use std::{i8, ops::Mul};
+use std::{usize, ops::Mul};
 
 use File::*;
 use Rank::*;
@@ -30,20 +30,7 @@ impl From<File> for usize {
         }
     }
 }
-impl From<File> for i8 {
-    fn from(value: File) -> Self {
-        match value {
-            One => 0,
-            Two => 1,
-            Three => 2,
-            Four => 3,
-            Five => 4,
-            Six => 5,
-            Seven => 6,
-            Eight => 7
-        }
-    }
-}
+
 impl From<usize> for File {
     fn from(value: usize) -> Self {
         match value {
@@ -103,50 +90,26 @@ impl From<usize> for Rank {
     }
 }
 
-impl From<Rank> for i8 {
-    fn from(value: Rank) -> Self {
-        match value {
-            A => 0,
-            B => 1,
-            C => 2,
-            D => 3,
-            E => 4,
-            F => 5,
-            G => 6,
-            H => 7
-        }
-    }
-}
-
-impl From<i8> for usize {
-    fn from(value: i8) -> Self {
-        value.clamp(0, i8::MAX) as usize
-    }
-}
 
 /// BoardPosition is the representation of a position on a position board
 /// *Ranks* => *rows*
 /// *File* => *columns*
 /// 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub struct BoardPosition {
-    pub x: i8,
-    pub y: i8
+    pub x: usize,
+    pub y: usize
 }
 
 impl BoardPosition {
     pub fn new(x: Rank, y: File) -> Self {
         BoardPosition {
-            x: i8::from(x),
-            y: i8::from(y)
+            x: usize::from(x),
+            y: usize::from(y)
         }
     }
 
     pub fn from_usize(x: usize, y: usize) -> Self {
-        BoardPosition::new(x.into(), y.into())
-    }
-
-    pub fn from_i8(x: i8, y: i8) -> Self {
         BoardPosition{
             x,
             y
@@ -184,9 +147,9 @@ impl From<&str> for BoardPosition {
     }
 }
 
-impl Mul<i8> for BoardPosition {
+impl Mul<usize> for BoardPosition {
     type Output = BoardPosition;
-    fn mul(self, rhs: i8) -> Self::Output {
-        BoardPosition::from_i8(self.x * rhs, self.y * rhs)
+    fn mul(self, rhs: usize) -> Self::Output {
+        BoardPosition::from_usize(self.x * rhs, self.y * rhs)
     }
 }

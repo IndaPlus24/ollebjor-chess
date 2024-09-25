@@ -1,12 +1,11 @@
 use std::{fmt};
 use Piece::*;
-mod board_position;
+pub mod board_position;
 use board_position::*;
-mod moveset;
+pub mod moveset;
 use moveset::*;
-mod board;
+pub mod board;
 use board::*;
-mod tests;
 
 const MAX_STEPS: u8 = 100;
 const BOARD_SIZE: usize = 8;
@@ -17,7 +16,7 @@ pub enum GameState {
     Check,
     GameOver,
 }
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
 pub enum Color {
     White,
     Black,
@@ -56,7 +55,7 @@ impl Piece {
 }
 
 #[derive(Debug)]
-enum ChessError {
+pub enum ChessError {
     IllegalMove,
     IllegalSpawn,
     NoPiece
@@ -66,9 +65,9 @@ enum ChessError {
 ///Game
 pub struct Game {
     /* save board, active colour, ... */
-    state: GameState,
-    turn: Color,
-    board: Board,
+    pub state: GameState,
+    pub turn: Color,
+    pub board: Board,
 }
 
 impl Game {
@@ -94,7 +93,7 @@ impl Game {
         // Vita pjäser
         //TODO: Handle results
         let color = Color::White;
-        let mut position = BoardPosition::from_num(0, 7);
+        let mut position = BoardPosition::from_usize(0, 7);
         let piece_array = [
             Rook,
             Knight,
@@ -109,37 +108,33 @@ impl Game {
         // Vita coola grabbar
         for p in piece_array {
             self.board.spawn_piece(p, color,&position).expect("Could not spawn piece");
-            //position.x += 1;
-            position.x = Rank::from(usize::from(position.x) + 1);
+            position.x += 1;
         }
         // Flytta ned ett steg
-        position = BoardPosition::from_num(0, 6);
+        position = BoardPosition::from_usize(0, 6);
 
         // Vita bondlurkar
         for _ in 1..=8 {
             self.board.spawn_piece(Pawn, color, &position).expect("Could not spawn piece");
-            //position.x += 1
-            position.x = Rank::from(usize::from(position.x) + 1);
+            position.x += 1
         }
 
         let color = Color::Black;
-        position = BoardPosition::from_num(0,0);
+        position = BoardPosition::from_usize(0,0);
 
         // Svarta coolingar
         for p in piece_array {
             self.board.spawn_piece(p, color, &position).expect("Could not spawn piece");
-            //position.x += 1
-            position.x = Rank::from(usize::from(position.x) + 1);
+            position.x += 1
         }
 
         // Flytta upp ett steg
-        position = BoardPosition::from_num(0, 1);
+        position = BoardPosition::from_usize(0, 1);
 
         // svarta bondlurkar
         for _ in 1..=8 {
             self.board.spawn_piece(Pawn, color, &position).expect("Could not spawn piece");
-            //position.x += 1
-            position.x = Rank::from(usize::from(position.x) + 1);
+            position.x += 1
         }
     }
 
@@ -147,14 +142,36 @@ impl Game {
     /// move a piece and return the resulting state of the game.
     pub fn move_piece(&mut self, from: &BoardPosition, to: &BoardPosition) -> Result<GameState, ChessError> {
         //Get the pseudolegal moves for the piece
-        if let Some((piece, color)) =  self.board.get_piece(from) {
-            let moveset = moveset::get_moveset(piece, Some(color));
+        // if let Some((piece, color)) =  self.board.get_piece(from) {
+        //     let moveset = moveset::get_moveset(piece, Some(color));
             
+        //     let pseudo_legal_moves = moveset.get_pseudo_legal(from);
+        //     let mut legal_moves: Vec<BoardPosition> = vec![];
 
 
-        } else {
-            return Err(ChessError::NoPiece)
-        }
+        //     'direction: for move_map in pseudo_legal_moves {
+        //         'step: for (step, bp) in move_map.1 {
+        //             //Check to see if bp is occupied    
+        //             if let Some((p,c)) = self.board.get_piece(&bp) {
+        //                 //if it is then check the color,
+        //                 if c == color {
+        //                     //if it is same color then exclude else include
+        //                     break 'direction;
+        //                 } 
+        //             } else {
+        //                 //space is empty, push position
+        //                 legal_moves.push(bp);
+        //             }
+        //         }
+        //             //if it is not occuppied then push it to legal moves
+
+
+        //     }
+
+
+        // } else {
+        //     return Err(ChessError::NoPiece)
+        // }
         //Use the pseudolegal moves for the piece to get the legal moves (dont forget to check check)
         //If to is a position to move to then move then remove any eventual piece that is there, track it, and move the piece there
 
@@ -175,17 +192,29 @@ impl Game {
     /// new positions of that piece. Don't forget the rules for check.
     ///
     /// (optional) Don't forget to include en passent and castling.
-    pub fn get_possible_moves(&self, postion: &BoardPosition) -> Option<Vec<BoardPosition>> {
-        if let Some(piece_color_pair) =  self.board.get_piece(postion) {
-            // get the moves for the piece
-            let moveset = get_moveset(piece_color_pair.0, Some(piece_color_pair.1));
-            
-            let legal_moves: Vec<moveset::Move> = vec![];
-            // get the legal moves for the piece based on the board
-            for psuedo_legal_move in moveset.translations {
-                
-            }
+    pub fn get_possible_moves(&self, position: &BoardPosition) -> Option<Vec<BoardPosition>> {
+        //Get the piece
+        if let Some((piece, color)) =  self.board.get_piece(position) {
+           let moveset = moveset::get_moveset(piece, Some(color));
 
+           let mut legal_moves: Vec<BoardPosition> = vec![];
+           'step: for (step, move_action) in moveset.moves.into_iter().enumerate() {
+                //Check to see if there is a piece on this place
+                let next_step = move_action.get_position(position, step);
+                if let Some((_p, c)) = self.board.get_piece(&next_step) {
+                    if c == color {
+                        break 'step;
+                    } else {
+                        //push then break
+                        legal_moves.push(next_step);
+                        break 'step;
+                    }
+                } else {
+                    //Push this step
+                    legal_moves.push(next_step);
+                }
+           }
+           return Some(legal_moves);
         }
         None
     }
