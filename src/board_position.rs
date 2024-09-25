@@ -1,13 +1,15 @@
-use core::{fmt, num};
-use std::{usize, ops::Mul};
+use core::fmt;
+use std::{ops::Mul, usize};
 
 use File::*;
 use Rank::*;
 
+use crate::ChessError;
+
 ///Rank
 /// Rank is the enum representing the y-value of the board position. 
 /// It consists of Let. (One, Two, ..., Seven, Eight)
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub enum Rank {
     One,
     Two,
@@ -45,12 +47,43 @@ impl From<usize> for Rank {
             5 => Six, 
             6 => Seven,
             7 => Eight,
-            big => Rank::from(big % 8)
+            _ => panic!()
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+impl From<Rank> for char {
+    fn from(value: Rank) -> Self {
+        match value {
+            One => '1',
+            Two => '2',
+            Three => '3',
+            Four => '4',
+            Five => '5',
+            Six => '6',
+            Seven => '7',
+            Eight => '8'
+        }
+    }
+}
+
+impl From<char> for Rank {
+    fn from(value: char) -> Self {
+        match value {
+            '0' => One, 
+            '1' => Two,
+            '2' => Three,
+            '3' => Four, 
+            '4' => Five, 
+            '5' => Six, 
+            '6' => Seven,
+            '7' => Eight,
+            _ => panic!()
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub enum File {
     A,
     B,
@@ -78,7 +111,7 @@ impl From<File> for usize {
 }
 
 impl From<usize> for File {
-    fn from(value: usize) -> Result<ChessError, File> {
+    fn from(value: usize) -> File{
         match value {
             0 => A, 
             1 => B,
@@ -88,37 +121,95 @@ impl From<usize> for File {
             5 => F, 
             6 => G,
             7 => H,
-            big => File::from(big % 8)
+            _ => panic!()
         }
     }
 }
 
+impl From<File> for char {
+    fn from(value: File) -> Self {
+        match value {
+            A => 'A', 
+            B => 'B',
+            C => 'C',
+            D => 'D', 
+            E => 'E', 
+            F => 'F', 
+            G => 'G',
+            H => 'H',
+        }
+    }
+}
 
+impl From<char> for File {
+    fn from(value: char) -> Self {
+        match value {
+            'A' => A, 
+            'B' => B,
+            'C' => C,
+            'D' => D, 
+            'E' => E, 
+            'F' => F, 
+            'G' => G,
+            'H' => H,
+            _ => panic!()
+        }
+    }
+}
 /// BoardPosition is the representation of a position on a position board
 /// *Ranks* => *rows*
 /// *File* => *columns*
 /// 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub struct BoardPosition {
+    pub file: File,
+    pub rank: Rank
+}
+
+impl BoardPosition {
+    pub fn new(file: File, rank: Rank) -> Self {
+        BoardPosition {
+            file,
+            rank,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
+pub struct Position {
     pub x: usize,
     pub y: usize
 }
 
-impl BoardPosition {
-    pub fn new(x: Rank, y: File) -> Self {
-        BoardPosition {
-            x: usize::from(x),
-            y: usize::from(y)
+impl Position {
+    pub fn new(x: usize, y: usize) -> Result<Self, ChessError> {
+        if x > 7 || y > 7 {
+            return Err(ChessError::OutOfBounds);
         }
-    }
 
-    pub fn from_usize(x: usize, y: usize) -> Self {
-        BoardPosition{
+        Ok(Position {
             x,
-            y
+            y,
+        })
+    }
+}
+
+impl From<BoardPosition> for Position {
+    fn from(value: BoardPosition) -> Self {
+        Position { 
+            x: value.rank.into(), 
+            y: value.file.into()
         }
     }
+}
 
+impl From<Position> for BoardPosition {
+    fn from(value: Position) -> Self {
+        BoardPosition {
+            file: File::from(value.x),
+            rank: Rank::from(value.y) 
+        }
+    }
 }
 
 impl From<&str> for BoardPosition {
@@ -146,38 +237,28 @@ impl From<&str> for BoardPosition {
             }
         }
 
-        BoardPosition::from_usize(char_to_num(x), char_to_num(y))
+        BoardPosition::from(Position::new(char_to_num(x), char_to_num(y)).unwrap())
     }
 }
 
 
-impl Mul<usize> for BoardPosition {
-    type Output = BoardPosition;
+impl Mul<usize> for Position {
+    type Output = Position;
     fn mul(self, rhs: usize) -> Self::Output {
-        BoardPosition::from_usize(self.x * rhs, self.y * rhs)
+        Position::new(self.x * rhs, self.y * rhs).unwrap()
     }
 }
 
 impl fmt::Debug for BoardPosition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        
-        fn num_to_char(n: usize) -> char {
-            match n {
-                0 => 'A',
-                1 => 'B',
-                2 => 'C',
-                3 => 'D',
-                4 => 'E',
-                5 => 'F',
-                6 => 'G',
-                7 => 'H',
-                _ => 'Ö'
-            }
-        }
+        let file: char = self.file.into();
+        let rank: char = self.rank.into();
+        write!(f, "{}{}", file, rank)
+    }
+}
 
-        let x = num_to_char(self.x);
-        let y = self.y;
-
-        write!(f, "{}{}", x, y)
+impl fmt::Debug for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "x:{} y:{}", self.x, self.y)
     }
 }
