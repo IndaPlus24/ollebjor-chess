@@ -2,6 +2,8 @@ use olle_chess::*;
 use olle_chess::board::Board;
 use olle_chess::position::*;
 
+//ChatGPT skrev dessa tester också lol
+
 fn sample_piece() -> Piece {
     // Assuming you have some Piece struct with an enum or other definition.
     // Replace this with actual piece creation logic.
@@ -102,7 +104,6 @@ fn test_get_piece_ref() {
 fn test_board_display() {
     let board = Board::new();
     let board_display = format!("{}", board);
-
     // This assumes the board display will be a grid of positions.
     // You can adjust this to match the exact output format of the board.
     assert!(board_display.contains("A1"));

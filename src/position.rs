@@ -70,14 +70,14 @@ impl From<Rank> for char {
 impl From<char> for Rank {
     fn from(value: char) -> Self {
         match value {
-            '0' => One, 
-            '1' => Two,
-            '2' => Three,
-            '3' => Four, 
-            '4' => Five, 
-            '5' => Six, 
-            '6' => Seven,
-            '7' => Eight,
+            '1' => One, 
+            '2' => Two,
+            '3' => Three,
+            '4' => Four, 
+            '5' => Five, 
+            '6' => Six, 
+            '7' => Seven,
+            '8' => Eight,
             _ => panic!()
         }
     }
@@ -214,30 +214,19 @@ impl From<Position> for BoardPosition {
 
 impl From<&str> for BoardPosition {
     fn from(value: &str) -> Self {
-        let value = value.trim();
+        let value = value.trim().to_uppercase();
 
         if value.len() != 2 {
             panic!("POSITION STRING IS NOT 2 LONG")
         }
-
-        let x = value.chars().next().unwrap_or('Ö');
-        let y = value.chars().next().unwrap_or('Ö');
-
-        fn char_to_num(c: char) -> usize {
-            match c.to_uppercase().next().unwrap_or('Ö') {
-                'A' => 0,
-                'B' => 1,
-                'C' => 2,
-                'D' => 3,
-                'E' => 4,
-                'F' => 5,
-                'G' => 6,
-                'H' => 7,
-                _ => 0
-            }
-        }
-
-        BoardPosition::from(Position::new(char_to_num(x), char_to_num(y)).unwrap())
+        println!("str is: {value}");
+        let mut chars = value.chars();
+        let file = chars.next().unwrap_or('Ö');
+        let rank = chars.next().unwrap_or('Ö');
+        
+        println!("{:?} {:?}", file, rank);
+        println!("{:?}", BoardPosition::new(file.into(), rank.into()));
+        BoardPosition::new(file.into(), rank.into())
     }
 }
 
