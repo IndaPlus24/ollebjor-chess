@@ -1,5 +1,5 @@
 use olle_chess::*;
-use board_position::*;
+use position::*;
 
 // check test framework
 #[test]

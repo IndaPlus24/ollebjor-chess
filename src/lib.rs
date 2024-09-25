@@ -1,7 +1,7 @@
 use std::{fmt};
 use Piece::*;
-pub mod board_position;
-use board_position::*;
+pub mod position;
+use position::*;
 pub mod moveset;
 use moveset::*;
 pub mod board;
