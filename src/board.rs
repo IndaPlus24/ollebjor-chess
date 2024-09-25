@@ -1,5 +1,5 @@
 use crate::*;
-const BOARD_SIZE: usize = 8;
+pub const BOARD_SIZE: usize = 8;
 /// Board
 /// Board is the struct for raw board util behaviour such as placing pieces, removing pieces, getting pieces.
 #[derive(Debug)]
