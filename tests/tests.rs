@@ -38,7 +38,7 @@ fn board_position_from_rank_and_file() {
 fn move_set_is_some() {
     let game = Game::new();
 
-    let bp1 = BoardPosition::new(Rank::B, File::Seven);
+    let bp1 = BoardPosition::new(Rank::A, File::Seven);
 
     let moves = game.get_possible_moves(&bp1);
 
@@ -58,6 +58,7 @@ fn pawn_can_move() {
     let bp2 = BoardPosition::from_usize(2, 5);
 
     let pawn = game.board.get_piece_ref(&bp1).unwrap();
+    println!("{:?}", pawn.0);
     
     let result = game.move_piece(&bp1, &bp2);
     if let Err(x) = result {
@@ -65,4 +66,11 @@ fn pawn_can_move() {
     }
 
     assert_eq!(pawn, game.board.get_piece_ref(&bp2).unwrap());
+}
+
+#[test]
+fn board_is_facing_right_direction(){
+    let game = Game::new();
+
+    println!("{}", game.board);
 }

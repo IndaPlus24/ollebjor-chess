@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::*;
 use Move::*;
 
@@ -58,6 +56,7 @@ impl Moveset {
 
 pub fn get_moveset(piece: Piece, color: Option<Color>) -> Moveset {
     match piece {
-        other => Moveset::new(0, vec![], false)
+        Pawn => Moveset::new(1, vec![Forward(color.expect("expected color for pawn"))], true),
+        _ => Moveset::new(0, vec![], false),
     }
 }

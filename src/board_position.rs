@@ -1,11 +1,14 @@
+use core::{fmt, num};
 use std::{usize, ops::Mul};
 
 use File::*;
 use Rank::*;
 
-
+///Rank
+/// Rank is the enum representing the y-value of the board position. 
+/// It consists of Let. (One, Two, ..., Seven, Eight)
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum File {
+pub enum Rank {
     One,
     Two,
     Three,
@@ -16,8 +19,8 @@ pub enum File {
     Eight
 }
 
-impl From<File> for usize {
-    fn from(value: File) -> Self {
+impl From<Rank> for usize {
+    fn from(value: Rank) -> Self {
         match value {
             One => 0,
             Two => 1,
@@ -31,7 +34,7 @@ impl From<File> for usize {
     }
 }
 
-impl From<usize> for File {
+impl From<usize> for Rank {
     fn from(value: usize) -> Self {
         match value {
             0 => One, 
@@ -42,13 +45,13 @@ impl From<usize> for File {
             5 => Six, 
             6 => Seven,
             7 => Eight,
-            big => File::from(big % 8)
+            big => Rank::from(big % 8)
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum Rank {
+pub enum File {
     A,
     B,
     C,
@@ -59,8 +62,8 @@ pub enum Rank {
     H
 }
 
-impl From<Rank> for usize {
-    fn from(value: Rank) -> Self {
+impl From<File> for usize {
+    fn from(value: File) -> Self {
         match value {
             A => 0,
             B => 1,
@@ -74,8 +77,8 @@ impl From<Rank> for usize {
     }
 }
 
-impl From<usize> for Rank {
-    fn from(value: usize) -> Self {
+impl From<usize> for File {
+    fn from(value: usize) -> Result<ChessError, File> {
         match value {
             0 => A, 
             1 => B,
@@ -85,7 +88,7 @@ impl From<usize> for Rank {
             5 => F, 
             6 => G,
             7 => H,
-            big => Rank::from(big % 8)
+            big => File::from(big % 8)
         }
     }
 }
@@ -95,7 +98,7 @@ impl From<usize> for Rank {
 /// *Ranks* => *rows*
 /// *File* => *columns*
 /// 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub struct BoardPosition {
     pub x: usize,
     pub y: usize
@@ -147,9 +150,34 @@ impl From<&str> for BoardPosition {
     }
 }
 
+
 impl Mul<usize> for BoardPosition {
     type Output = BoardPosition;
     fn mul(self, rhs: usize) -> Self::Output {
         BoardPosition::from_usize(self.x * rhs, self.y * rhs)
+    }
+}
+
+impl fmt::Debug for BoardPosition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        fn num_to_char(n: usize) -> char {
+            match n {
+                0 => 'A',
+                1 => 'B',
+                2 => 'C',
+                3 => 'D',
+                4 => 'E',
+                5 => 'F',
+                6 => 'G',
+                7 => 'H',
+                _ => 'Ö'
+            }
+        }
+
+        let x = num_to_char(self.x);
+        let y = self.y;
+
+        write!(f, "{}{}", x, y)
     }
 }

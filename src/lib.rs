@@ -58,7 +58,8 @@ impl Piece {
 pub enum ChessError {
     IllegalMove,
     IllegalSpawn,
-    NoPiece
+    NoPiece,
+    OutOfBounds,
 }
 
 
@@ -141,40 +142,6 @@ impl Game {
     /// If the current game state is InProgress and the move is legal,
     /// move a piece and return the resulting state of the game.
     pub fn move_piece(&mut self, from: &BoardPosition, to: &BoardPosition) -> Result<GameState, ChessError> {
-        //Get the pseudolegal moves for the piece
-        // if let Some((piece, color)) =  self.board.get_piece(from) {
-        //     let moveset = moveset::get_moveset(piece, Some(color));
-            
-        //     let pseudo_legal_moves = moveset.get_pseudo_legal(from);
-        //     let mut legal_moves: Vec<BoardPosition> = vec![];
-
-
-        //     'direction: for move_map in pseudo_legal_moves {
-        //         'step: for (step, bp) in move_map.1 {
-        //             //Check to see if bp is occupied    
-        //             if let Some((p,c)) = self.board.get_piece(&bp) {
-        //                 //if it is then check the color,
-        //                 if c == color {
-        //                     //if it is same color then exclude else include
-        //                     break 'direction;
-        //                 } 
-        //             } else {
-        //                 //space is empty, push position
-        //                 legal_moves.push(bp);
-        //             }
-        //         }
-        //             //if it is not occuppied then push it to legal moves
-
-
-        //     }
-
-
-        // } else {
-        //     return Err(ChessError::NoPiece)
-        // }
-        //Use the pseudolegal moves for the piece to get the legal moves (dont forget to check check)
-        //If to is a position to move to then move then remove any eventual piece that is there, track it, and move the piece there
-
         Err(ChessError::IllegalMove)
     }
 
@@ -198,10 +165,16 @@ impl Game {
            let moveset = moveset::get_moveset(piece, Some(color));
 
            let mut legal_moves: Vec<BoardPosition> = vec![];
-           'step: for (step, move_action) in moveset.moves.into_iter().enumerate() {
+           for move_action in moveset.moves.into_iter() {
+
+            'step: for step in 1..=moveset.steps {
+                println!("Step: {step}");
                 //Check to see if there is a piece on this place
                 let next_step = move_action.get_position(position, step);
+                println!("Position: {:?}", next_step);
                 if let Some((_p, c)) = self.board.get_piece(&next_step) {
+                    println!("{c:?}");
+                    println!("{_p:?}");
                     if c == color {
                         break 'step;
                     } else {
@@ -213,6 +186,7 @@ impl Game {
                     //Push this step
                     legal_moves.push(next_step);
                 }
+            }
            }
            return Some(legal_moves);
         }
@@ -241,13 +215,13 @@ impl fmt::Debug for Game {
         /* build board representation string */
 
         write!(f, "\n");
-        for col in self.board.position_array { 
-            for piece in col {
+        for row in self.board.position_array { 
+            for piece in row {
                 if piece.is_some() {
                     let c = piece.unwrap().0.to_char(&piece.unwrap().1);
-                    write!(f, "{c}");
+                    write!(f, "{c} ");
                 } else {
-                    write!(f, "*");
+                    write!(f, "* ");
                 }
             }
             write!(f, "\n");
