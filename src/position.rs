@@ -195,17 +195,17 @@ impl Position {
     }
 }
 
-impl From<&BoardPosition> for Position {
-    fn from(value: &BoardPosition) -> Self {
+
+impl From<BoardPosition> for Position {
+    fn from(value: BoardPosition) -> Self {
         Position { 
             x: value.file.into(), 
             y: value.rank.into()
         }
     }
 }
-
-impl From<BoardPosition> for Position {
-    fn from(value: BoardPosition) -> Self {
+impl From<&BoardPosition> for Position {
+    fn from(value: &BoardPosition) -> Self {
         Position { 
             x: value.file.into(), 
             y: value.rank.into()

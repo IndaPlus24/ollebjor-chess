@@ -35,13 +35,14 @@ impl Board {
         Ok(())
     }
 
+    /// Sets the piece in the specified position without checking if there is a piece in that position
     pub fn set_piece(&mut self, piece: Piece, position: &Position) -> &Option<Piece> {
         self.piece_array[(7usize).abs_diff(position.y)][position.x] = Some(piece);
         self.get_piece_ref(position)
     }
 
     ///Removes the piece from the specified location
-    pub fn despawn_piece(&mut self, position: Position) {
+    pub fn despawn_piece(&mut self, position: &Position) {
         self.piece_array[(7usize).abs_diff(position.y)][position.x] = None;
     }
 
@@ -53,10 +54,10 @@ impl Board {
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (y, rank) in self.piece_array.iter().enumerate() {
-            write!(f, "\n");
+            write!(f, "\n")?;
             for (x, _file) in rank.iter().enumerate() {
                 let pos: BoardPosition = Position::new(x, (7usize).abs_diff(y)).unwrap().into();
-                write!(f, " {pos:?}");
+                write!(f, " {pos:?}")?;
             }
         }
         write!(f, "\n")
@@ -66,9 +67,9 @@ impl fmt::Display for Board {
 impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (y, rank) in self.piece_array.iter().enumerate() {
-            write!(f, "\n");
+            write!(f, "\n")?;
             for (x, _file) in rank.iter().enumerate() {
-                write!(f, "[{}][{}] ", x, y);
+                write!(f, "[{}][{}] ", x, y)?;
             }
         }
         write!(f, "\n")

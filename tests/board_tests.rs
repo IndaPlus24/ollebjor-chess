@@ -61,7 +61,7 @@ fn test_despawn_piece() {
     let piece = sample_piece();
 
     board.spawn_piece(piece, &position).unwrap();
-    board.despawn_piece(position);
+    board.despawn_piece(&position);
 
     assert_eq!(board.get_piece(&position), None);
 }

@@ -5,7 +5,7 @@ use position::*;
 
 fn setup_empty_at_e5(piece: Piece) -> Game {
     let mut game = Game::empty();
-    game.board.spawn_piece(piece, &BoardPosition::from("E5").into());
+    game.board.spawn_piece(piece, &BoardPosition::from("E5").into()).expect("could not spawn piece!");
     return  game;
 }
 

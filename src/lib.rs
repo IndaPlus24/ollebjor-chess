@@ -3,11 +3,8 @@ use Piece::*;
 pub mod position;
 use position::*;
 pub mod moveset;
-use moveset::*;
 pub mod board;
 use board::*;
-
-const MAX_STEPS: u8 = 100;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum GameState {
@@ -72,16 +69,18 @@ impl Piece {
 #[derive(Debug)]
 pub enum ChessError {
     IllegalMove,
+    GameAlreadyOver,
     IllegalSpawn,
     NoPiece,
     OutOfBounds,
+    PromotionError(String),
 }
 
 
 ///Game
 pub struct Game {
     /* save board, active colour, ... */
-    pub state: GameState,
+    state: GameState,
     pub turn: Color,
     pub board: Board,
 }
@@ -167,12 +166,53 @@ impl Game {
     /// If the current game state is InProgress and the move is legal,
     /// move a piece and return the resulting state of the game.
     pub fn move_piece(&mut self, from: &BoardPosition, to: &BoardPosition) -> Result<GameState, ChessError> {
+        if self.state == GameState::GameOver {
+            return Err(ChessError::GameAlreadyOver);
+        }
+        if self.board.get_piece(&from.into()).is_none() {
+            return Err(ChessError::NoPiece);
+        }
+
+        //Get the possible moves for the piece
+        if let Some(possible_moves) = self.get_possible_moves(from) {
+            //Check if the move is in the possible moves
+            if possible_moves.contains(to) {
+                //Move the piece & overwrite the piece in the new position
+                if let Some(piece) = self.board.get_piece(&from.into()) {
+                    self.board.set_piece(piece, &to.into());
+                } else {
+                    return Err(ChessError::NoPiece); //Should never happen
+                }
+                //Remove the piece from the old position
+                self.board.despawn_piece(&from.into());
+                //Change the turn
+                self.turn = self.turn.other();
+                //TODO: Check if it is check
+                return Ok(GameState::InProgress);
+            }
+        }
+
         Err(ChessError::IllegalMove)
     }
 
-    /// Set the piece type that a peasant becomes following a promotion.
-    pub fn set_promotion(&mut self, piece: Piece) -> () {
-        ()
+    /// Promote
+    pub fn promote_pawn(&mut self, pawn_position: &BoardPosition, promoted_piece: Piece) -> Result<(), ChessError> {
+        //Get the piece at the position
+        if let Some(pawn) = self.board.get_piece(&pawn_position.into()) {
+            //Check if it is a pawn
+            if let Pawn(_) = pawn {
+                //Check if the new piece is a king or a pawn
+                if let King(_) = promoted_piece {
+                    return Err(ChessError::PromotionError("Cannot promote to king".to_string()));
+                }
+                if let Pawn(_) = promoted_piece {
+                    return Err(ChessError::PromotionError("Cannot promote to pawn".to_string()));
+                }
+                //Change the piece
+                self.board.set_piece(promoted_piece, &pawn_position.into());
+            }
+        }
+        return Ok(());
     }
 
     /// Get the current game state.
@@ -197,18 +237,22 @@ impl Game {
             'step: for step in 1..=moveset.steps {
 
                 //Check to see if there is a piece on this place
-                let next_step = move_action.get_position(pos, step);
-                if let Some(p) = self.board.get_piece(&next_step) {
+                let next_position = move_action.get_position(pos, step);
+                if let Ok(next_step) = next_position {
+                    if let Some(p) = self.board.get_piece(&next_step) {
                     if p.get_color() == piece.get_color() {
-                        break 'step;
+                            break 'step;
+                        } else {
+                            //push then break
+                            legal_moves.push(next_step.into());
+                            break 'step;
+                        }
                     } else {
-                        //push then break
+                        //Push this step
                         legal_moves.push(next_step.into());
-                        break 'step;
                     }
-                } else {
-                    //Push this step
-                    legal_moves.push(next_step.into());
+                }else{
+                    break 'step;
                 }
             }
            }
@@ -218,38 +262,18 @@ impl Game {
     }
 }
 
-
-/// Implement print routine for Game.
-///
-/// Output example:
-///(y)   
-///    |:----------------------:|
-/// 8  | R  Kn B  K  Q  B  Kn R |
-/// 7  | P  P  P  P  P  P  P  P |
-/// 6  | *  *  *  *  *  *  *  * |
-/// 5  | *  *  *  *  *  *  *  * |
-/// 4  | *  *  *  *  *  *  *  * |
-/// 3  | *  *  *  *  *  *  *  * |
-/// 2  | P  P  P  P  P  P  P  P |
-/// 1  | R  Kn B  K  Q  B  Kn R |
-///    |:----------------------:|
-///      A  B  C  D  E  F  G  H   (x)
 impl fmt::Debug for Game {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (_y, rank) in self.board.piece_array.iter().enumerate() {
-            write!(f, "\n");
+            write!(f, "\n")?;
             for (_x, p) in rank.iter().enumerate() {
                 if let Some(piece) = p {
-                    write!(f, " {}", piece.char());
+                    write!(f, " {}", piece.char())?;
                 } else {
-                    write!(f, " *");
+                    write!(f, " *")?;
                 }
             }
         }
         write!(f, "\n")
     }
 }
-
-// --------------------------
-// ######### TESTS ##########
-// --------------------------
