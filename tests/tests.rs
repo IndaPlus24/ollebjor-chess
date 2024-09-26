@@ -89,3 +89,18 @@ fn board_is_facing_right_direction(){
     println!("{}", game.board);
     println!("{:?}", game);
 }
+
+#[test]
+fn test_piece_actually_moves() {
+    let mut game = setup_empty_at_e5(Piece::Pawn(Color::White));
+
+    let bp1 = BoardPosition::new(File::E, Rank::Five);
+    let bp2 = BoardPosition::new(File::E, Rank::Six);
+
+    println!("Before:\n{:?}", game);
+    game.move_piece(&bp1, &bp2).expect("could not move piece!");
+    println!("After:\n{:?}", game);
+
+    assert_eq!(game.board.get_piece(&bp1.into()), None);
+    assert_eq!(game.board.get_piece(&bp2.into()), Some(Piece::Pawn(Color::White)));
+}

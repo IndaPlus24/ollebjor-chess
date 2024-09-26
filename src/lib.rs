@@ -1,4 +1,4 @@
-use std::{fmt};
+use std::fmt;
 use Piece::*;
 pub mod position;
 use position::*;
@@ -113,8 +113,8 @@ impl Game {
             Rook(color),
             Knight(color),
             Bishop(color),
-            King(color),
             Queen(color),
+            King(color),
             Bishop(color),
             Knight(color),
             Rook(color),
@@ -140,8 +140,8 @@ impl Game {
             Rook(color),
             Knight(color),
             Bishop(color),
-            King(color),
             Queen(color),
+            King(color),
             Bishop(color),
             Knight(color),
             Rook(color)
@@ -177,18 +177,32 @@ impl Game {
         if let Some(possible_moves) = self.get_possible_moves(from) {
             //Check if the move is in the possible moves
             if possible_moves.contains(to) {
+
+                //Check so that the move does not put the player in check
+                if self.is_check(to){
+                    return Err(ChessError::IllegalMove);
+                }
+
                 //Move the piece & overwrite the piece in the new position
                 if let Some(piece) = self.board.get_piece(&from.into()) {
                     self.board.set_piece(piece, &to.into());
-                } else {
-                    return Err(ChessError::NoPiece); //Should never happen
                 }
                 //Remove the piece from the old position
                 self.board.despawn_piece(&from.into());
+
                 //Change the turn
                 self.turn = self.turn.other();
-                //TODO: Check if it is check
-                return Ok(GameState::InProgress);
+                //Check for check of the next player
+                let king_board_position = &self.board.get_king_position(self.turn).unwrap().into();
+                if self.is_check(king_board_position) {
+                    self.state = GameState::Check;
+                }else {
+                    self.state = GameState::InProgress;
+                }
+
+                return Ok(self.state);
+            } else {
+                return Err(ChessError::IllegalMove);
             }
         }
 
@@ -259,6 +273,38 @@ impl Game {
            return Some(legal_moves);
         }
         None
+    }
+
+    /// Check if the current player is in check based on the given position.
+    pub fn is_check(&self, position: &BoardPosition) -> bool {
+        //Check all the possible moves for all other pieces from the given position.
+
+        //Get all pieces of the other color and dedup them so we only check each pieces moves once
+        //This means we wont have to check the color later
+        let mut pieces_to_check = self.board.get_all_pieces_of_color(self.turn.other());
+        pieces_to_check.dedup();
+        //For each piece, check if the piece of that type is in the possible moves
+        for piece in pieces_to_check {
+            
+            let moves_for_piece = moveset::get_moveset(*piece);
+
+            for action in moves_for_piece.moves {
+                for step in 1..=moves_for_piece.steps {
+                    let next_position = action.get_position(&position.into(), step);
+                    
+                    //If there is a piece of the right variant in the possible moves, return true
+                    if let Ok(next_step) = next_position {
+                        //Get the piece on this step
+                        if let Some(p) = self.board.get_piece(&next_step) { //HELP should this be reference instead or will it not work cuz they are pointing to different blocks of memory?
+                            if p == *piece {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
 

@@ -1,7 +1,7 @@
 use olle_chess::*;
-use olle_chess::moveset::*;
+// use olle_chess::moveset::*;
+// use olle_chess::board::*;
 use olle_chess::position::*;
-use olle_chess::board::*;
 
 fn get_initial_position() -> Position {
     Position::new(3, 3).unwrap() // Sample position at D4

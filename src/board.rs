@@ -4,6 +4,8 @@ pub const BOARD_SIZE: usize = 8;
 /// Board is the struct for raw board util behaviour such as placing pieces, removing pieces, getting pieces.
 pub struct Board {
     pub piece_array: [[Option<Piece>; BOARD_SIZE]; BOARD_SIZE],
+    pub white_king_position: Option<Position>,
+    pub black_king_position: Option<Position>,
 }
 // Board has a 2D array that is first indexed by the rank then the file.
 // This is so that I can loop through a whole row, instead of columns.
@@ -11,6 +13,8 @@ impl Board {
     pub fn new() -> Board {
         Board {
             piece_array: [[None; BOARD_SIZE]; BOARD_SIZE],
+            white_king_position: None,
+            black_king_position: None,
         }
     }
 
@@ -37,17 +41,62 @@ impl Board {
 
     /// Sets the piece in the specified position without checking if there is a piece in that position
     pub fn set_piece(&mut self, piece: Piece, position: &Position) -> &Option<Piece> {
+        if let King(color) = piece {
+            match color {
+                Color::White => self.white_king_position = Some(*position),
+                Color::Black => self.black_king_position = Some(*position),
+            }
+        }
         self.piece_array[(7usize).abs_diff(position.y)][position.x] = Some(piece);
         self.get_piece_ref(position)
     }
 
     ///Removes the piece from the specified location
+    /// If it is the king, the king position is also removed
     pub fn despawn_piece(&mut self, position: &Position) {
+        //check to see if the piece is a king and remove the king position
+        if let Some(piece) = self.get_piece(position) {
+            if let King(color) = piece {
+                match color {
+                    Color::White => self.white_king_position = None,
+                    Color::Black => self.black_king_position = None,
+                }
+            }
+        }
         self.piece_array[(7usize).abs_diff(position.y)][position.x] = None;
     }
 
+    ///Clears the board of all pieces
     pub fn clear(&mut self) {
         self.piece_array = [[None; BOARD_SIZE]; BOARD_SIZE]
+    }
+
+    ///Returns the position of the king of the specified color
+    pub fn get_king_position(&self, color: Color) -> Option<Position> {
+        match color {
+            Color::White => self.white_king_position,
+            Color::Black => self.black_king_position,
+        }
+    }
+
+    ///Returns all pieces on the board
+    pub fn get_all_pieces(&self) -> Vec<&Piece> {
+        let mut pieces = Vec::new();
+        for rank in self.piece_array.iter() {
+            for piece in rank.iter() {
+                if let Some(p) = piece {
+                    pieces.push(p);
+                }
+            }
+        }
+        pieces
+    }
+
+    ///Returns all pieces on the board of the specified color
+    pub fn get_all_pieces_of_color(&self, color: Color) -> Vec<&Piece> {
+        let mut pieces = self.get_all_pieces();
+        pieces.retain(|p| p.get_color() == color);
+        pieces
     }
 }
 
