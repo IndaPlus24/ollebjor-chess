@@ -68,5 +68,6 @@ fn pawn_can_move() {
 fn board_is_facing_right_direction(){
     let game = Game::new();
 
+    println!("{:?}", game.board);
     println!("{}", game.board);
 }

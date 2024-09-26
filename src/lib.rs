@@ -235,7 +235,7 @@ impl fmt::Debug for Game {
             write!(f, "\n");
             for (_x, p) in rank.iter().enumerate() {
                 if let Some(piece) = p {
-                    write!(f, " {piece:?}");
+                    write!(f, " {}", piece.char());
                 } else {
                     write!(f, " *");
                 }

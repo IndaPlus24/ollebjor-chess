@@ -9,6 +9,7 @@ use crate::ChessError;
 ///Rank
 /// Rank is the enum representing the y-value of the board position. 
 /// It consists of Let. (One, Two, ..., Seven, Eight)
+/// Internally these are switched, (One=>7, Eight =>0)
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub enum Rank {
     One,
@@ -24,14 +25,14 @@ pub enum Rank {
 impl From<Rank> for usize {
     fn from(value: Rank) -> Self {
         match value {
-            One => 0,
-            Two => 1,
-            Three => 2,
-            Four => 3,
-            Five => 4,
-            Six => 5,
-            Seven => 6,
-            Eight => 7
+            One => 7,
+            Two => 6,
+            Three => 5,
+            Four => 4,
+            Five => 3,
+            Six => 2,
+            Seven => 1,
+            Eight => 0
         }
     }
 }
@@ -39,14 +40,14 @@ impl From<Rank> for usize {
 impl From<usize> for Rank {
     fn from(value: usize) -> Self {
         match value {
-            0 => One, 
-            1 => Two,
-            2 => Three,
-            3 => Four, 
-            4 => Five, 
-            5 => Six, 
-            6 => Seven,
-            7 => Eight,
+            7 => One, 
+            6 => Two,
+            5 => Three,
+            4 => Four, 
+            3 => Five, 
+            2 => Six, 
+            1 => Seven,
+            0 => Eight,
             _ => panic!()
         }
     }

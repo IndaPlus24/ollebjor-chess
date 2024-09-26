@@ -2,7 +2,6 @@ use crate::*;
 pub const BOARD_SIZE: usize = 8;
 /// Board
 /// Board is the struct for raw board util behaviour such as placing pieces, removing pieces, getting pieces.
-#[derive(Debug)]
 pub struct Board {
     pub piece_array: [[Option<Piece>; BOARD_SIZE]; BOARD_SIZE],
 }
@@ -58,6 +57,18 @@ impl fmt::Display for Board {
             for (x, _file) in rank.iter().enumerate() {
                 let pos: BoardPosition = Position::new(x, y).unwrap().into();
                 write!(f, " {pos:?}");
+            }
+        }
+        write!(f, "\n")
+    }
+}
+
+impl fmt::Debug for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (y, rank) in self.piece_array.iter().enumerate() {
+            write!(f, "\n");
+            for (x, _file) in rank.iter().enumerate() {
+                write!(f, "[{x}][{y}] ");
             }
         }
         write!(f, "\n")
