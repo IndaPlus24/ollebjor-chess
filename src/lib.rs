@@ -61,6 +61,12 @@ impl Piece {
             Rook(color) => color_case('r', color),
         }
     }
+    //Copilot wrote this :)
+    pub fn get_color(&self) -> Color {
+        match self {
+            Pawn(color) | Knight(color) | King(color) | Queen(color) | Bishop(color) | Rook(color) => *color,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -102,7 +108,7 @@ impl Game {
     pub fn init(&mut self) {
         // Vita pjäser
         //TODO: Handle results
-        let color = Color::White;
+        let color = Color::Black;
         let mut position = Position::new(0, 7).unwrap();
         let piece_array = [
             Rook(color),
@@ -129,7 +135,7 @@ impl Game {
             position.x += 1
         }
 
-        let color = Color::Black;
+        let color = Color::White;
         position = Position::new(0, 0).unwrap();
         let piece_array = [
             Rook(color),
@@ -179,36 +185,35 @@ impl Game {
     ///
     /// (optional) Don't forget to include en passent and castling.
     pub fn get_possible_moves(&self, position: &BoardPosition) -> Option<Vec<BoardPosition>> {
-        //Get the piece
-        // if let Some((piece, color)) =  self.board.get_piece(position) {
-        //    let moveset = moveset::get_moveset(piece, Some(color));
+        //It the position has a piece
+        let pos = &position.into();
+        if let Some(piece) =  self.board.get_piece(pos) {
+            //Get the moveset for that piece
+            let moveset = moveset::get_moveset(piece);
 
-        //    let mut legal_moves: Vec<BoardPosition> = vec![];
-        //    for move_action in moveset.moves.into_iter() {
+            let mut legal_moves: Vec<BoardPosition> = vec![];
+            for move_action in moveset.moves.into_iter() {
 
-        //     'step: for step in 1..=moveset.steps {
-        //         println!("Step: {step}");
-        //         //Check to see if there is a piece on this place
-        //         let next_step = move_action.get_position(position, step);
-        //         println!("Position: {:?}", next_step);
-        //         if let Some((_p, c)) = self.board.get_piece(&next_step) {
-        //             println!("{c:?}");
-        //             println!("{_p:?}");
-        //             if c == color {
-        //                 break 'step;
-        //             } else {
-        //                 //push then break
-        //                 legal_moves.push(next_step);
-        //                 break 'step;
-        //             }
-        //         } else {
-        //             //Push this step
-        //             legal_moves.push(next_step);
-        //         }
-        //     }
-        //    }
-        //    return Some(legal_moves);
-        // }
+            'step: for step in 1..=moveset.steps {
+
+                //Check to see if there is a piece on this place
+                let next_step = move_action.get_position(pos, step);
+                if let Some(p) = self.board.get_piece(&next_step) {
+                    if p.get_color() == piece.get_color() {
+                        break 'step;
+                    } else {
+                        //push then break
+                        legal_moves.push(next_step.into());
+                        break 'step;
+                    }
+                } else {
+                    //Push this step
+                    legal_moves.push(next_step.into());
+                }
+            }
+           }
+           return Some(legal_moves);
+        }
         None
     }
 }

@@ -16,11 +16,11 @@ impl Board {
 
     /// returns a reference to the piece in the specified position
     pub fn get_piece_ref(&self, position: &Position) -> &Option<Piece> {
-        &self.piece_array[position.y][position.x]
+        &self.piece_array[(7usize).abs_diff(position.y)][position.x]
     }
 
     pub fn get_piece(&self, position: &Position) -> Option<Piece> {
-        self.piece_array[position.y][position.x]
+        self.piece_array[(7usize).abs_diff(position.y)][position.x]
     }
 
     /// Spawns the specified piece in the specified position, 
@@ -36,13 +36,13 @@ impl Board {
     }
 
     pub fn set_piece(&mut self, piece: Piece, position: &Position) -> &Option<Piece> {
-        self.piece_array[position.y][position.x] = Some(piece);
+        self.piece_array[(7usize).abs_diff(position.y)][position.x] = Some(piece);
         self.get_piece_ref(position)
     }
 
     ///Removes the piece from the specified location
     pub fn despawn_piece(&mut self, position: Position) {
-        self.piece_array[position.y][position.x] = None;
+        self.piece_array[(7usize).abs_diff(position.y)][position.x] = None;
     }
 
     pub fn clear(&mut self) {
@@ -55,7 +55,7 @@ impl fmt::Display for Board {
         for (y, rank) in self.piece_array.iter().enumerate() {
             write!(f, "\n");
             for (x, _file) in rank.iter().enumerate() {
-                let pos: BoardPosition = Position::new(x, y).unwrap().into();
+                let pos: BoardPosition = Position::new(x, (7usize).abs_diff(y)).unwrap().into();
                 write!(f, " {pos:?}");
             }
         }
@@ -68,7 +68,7 @@ impl fmt::Debug for Board {
         for (y, rank) in self.piece_array.iter().enumerate() {
             write!(f, "\n");
             for (x, _file) in rank.iter().enumerate() {
-                write!(f, "[{x}][{y}] ");
+                write!(f, "[{}][{}] ", x, y);
             }
         }
         write!(f, "\n")

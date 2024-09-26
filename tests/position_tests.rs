@@ -70,8 +70,8 @@ fn test_position_to_board_position() {
 fn test_board_position_to_position() {
     let board_pos = BoardPosition::new(File::E, Rank::Seven);
     let pos: Position = board_pos.into();
-    assert_eq!(pos.x, 6);
-    assert_eq!(pos.y, 4);
+    assert_eq!(pos.y, 6);
+    assert_eq!(pos.x, 4);
 }
 
 #[test]

@@ -45,3 +45,4 @@ The board of the game. Holds the positions of all pieces. as well as the color o
 
 
 ##### Board
+![alt text](image.png)

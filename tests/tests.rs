@@ -1,6 +1,14 @@
 use olle_chess::*;
 use position::*;
 
+// Detta är mina egna tests som är lite sämre....
+
+fn setup_empty_at_e5(piece: Piece) -> Game {
+    let mut game = Game::empty();
+    game.board.spawn_piece(piece, &BoardPosition::from("E5").into());
+    return  game;
+}
+
 // check test framework
 #[test]
 fn it_works() {
@@ -50,18 +58,27 @@ fn move_set_is_some() {
 }
 
 #[test]
-fn pawn_can_move() {
-    // let mut game = Game::new();
+fn test_moveset_for_pawn_works_is_right() {
+    let game = Game::new();
 
-    // let bp1 = BoardPosition::new(File::B, Rank::Seven);
-    // let bp2 = BoardPosition::from(Position::new(1, 6).unwrap());
+    let bp1 = BoardPosition::new(File::B, Rank::Seven);
+    let bp2 = BoardPosition::from(Position::new(1, 5).unwrap());
 
-    // let result = game.move_piece(&bp1, &bp2);
-    // if let Err(x) = result {
-    //     println!("{x:?}");
-    // }
+    let moves = game.get_possible_moves(&bp1).unwrap_or(vec![]);
+    println!("pawn move from {:?} to {:?}", bp1, bp2);
+    assert!(moves == vec![bp2])
+}
 
-    // assert_eq!(pawn, game.board.get_piece_ref(&bp2).unwrap());
+#[test]
+fn test_moveset_for_white_pawn() {
+    let game = setup_empty_at_e5(Piece::Pawn(Color::White));
+
+    let bp1 = BoardPosition::new(File::E, Rank::Five);
+    let bp2 = BoardPosition::new(File::E, Rank::Six);
+
+    let moves = game.get_possible_moves(&bp1).unwrap_or(vec![]);
+    println!("pawn move from {:?} to {:?}", bp1, bp2);
+    assert!(moves == vec![bp2])
 }
 
 #[test]
@@ -70,4 +87,5 @@ fn board_is_facing_right_direction(){
 
     println!("{:?}", game.board);
     println!("{}", game.board);
+    println!("{:?}", game);
 }

@@ -25,14 +25,14 @@ pub enum Rank {
 impl From<Rank> for usize {
     fn from(value: Rank) -> Self {
         match value {
-            One => 7,
-            Two => 6,
-            Three => 5,
-            Four => 4,
-            Five => 3,
-            Six => 2,
-            Seven => 1,
-            Eight => 0
+            One => 0,
+            Two => 1,
+            Three => 2,
+            Four => 3,
+            Five => 4,
+            Six => 5,
+            Seven => 6,
+            Eight => 7
         }
     }
 }
@@ -40,14 +40,14 @@ impl From<Rank> for usize {
 impl From<usize> for Rank {
     fn from(value: usize) -> Self {
         match value {
-            7 => One, 
-            6 => Two,
-            5 => Three,
-            4 => Four, 
-            3 => Five, 
-            2 => Six, 
-            1 => Seven,
-            0 => Eight,
+            0 => One, 
+            1 => Two,
+            2 => Three, 
+            3 => Four, 
+            4 => Five, 
+            5 => Six, 
+            6 => Seven,
+            7 => Eight,
             _ => panic!()
         }
     }
@@ -195,17 +195,35 @@ impl Position {
     }
 }
 
+impl From<&BoardPosition> for Position {
+    fn from(value: &BoardPosition) -> Self {
+        Position { 
+            x: value.file.into(), 
+            y: value.rank.into()
+        }
+    }
+}
+
 impl From<BoardPosition> for Position {
     fn from(value: BoardPosition) -> Self {
         Position { 
-            x: value.rank.into(), 
-            y: value.file.into()
+            x: value.file.into(), 
+            y: value.rank.into()
         }
     }
 }
 
 impl From<Position> for BoardPosition {
     fn from(value: Position) -> Self {
+        BoardPosition {
+            file: File::from(value.x),
+            rank: Rank::from(value.y) 
+        }
+    }
+}
+
+impl From<&Position> for BoardPosition {
+    fn from(value: &Position) -> Self {
         BoardPosition {
             file: File::from(value.x),
             rank: Rank::from(value.y) 
