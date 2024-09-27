@@ -227,6 +227,7 @@ impl Game {
     /// * Check
     
     fn evaluate_game_state(&mut self) -> GameState {
+
         //Check for win
         if self.board.black_king_position.is_none() {
             self.state = GameState::GameOver(Color::White);
@@ -278,17 +279,25 @@ impl Game {
         };
         self.state
     }
-    /// Promotes the pawn at the game state promotions position to the new piece.
+    
+    /// Promotes the pawn at the game state promotions position to the new piece. 
+    /// Returns the new game state or a chess error explaining why the promotion failed.
     pub fn promote_pawn(&mut self, new_piece: Piece) -> Result<GameState, ChessError> {
-        //Checks to see if the game state is promotion.
+        //Checks to see if the game state is promotion
         if let GameState::Promotion(pawn_position) = self.state {
             // Make sure the new piece is a legal promotion piece
-            if let Pawn(_) = new_piece {
-                return Err(ChessError::PromotionError(format!(
-                    "Cannot promote pawn at {:?} to {:?}",
-                    pawn_position, new_piece
-                )));
+            match new_piece {
+                Queen(_) | Rook(_) | Bishop(_) | Knight(_) => {}
+                other => {
+                    return Err(ChessError::PromotionError(format!(
+                        "Cannot promote to pawn at {:?} to {:?}",
+                        pawn_position,
+                        other
+                    )));
+                }
+                
             }
+            //Promote the pawn
             self.board.set_piece(new_piece, &pawn_position.into());
             self.evaluate_game_state();
             return Ok(self.state);

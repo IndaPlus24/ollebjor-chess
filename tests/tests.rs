@@ -157,6 +157,7 @@ fn test_turn_is_switched_after_move() {
 
 #[test]
 fn test_promotion_works() {
+
     let mut game = Game::empty();
     game.board.spawn_piece(Piece::Pawn(Color::White), &BoardPosition::new(File::A, Rank::Seven).into()).unwrap();
     game.board.spawn_piece(Piece::King(Color::White), &BoardPosition::new(File::H, Rank::One).into()).unwrap();
@@ -186,4 +187,20 @@ fn test_promotion_works() {
     //Move black king -> ok
     let result = game.move_piece(&BoardPosition::new(File::H, Rank::Eight), &BoardPosition::new(File::H, Rank::Seven));
     assert!(result.is_ok());
+}
+
+#[test]
+fn test_winning_works() {
+    let mut game = Game::empty();
+    game.board.spawn_piece(Piece::King(Color::White), &BoardPosition::new(File::H, Rank::One).into()).unwrap();
+    game.board.spawn_piece(Piece::King(Color::Black), &BoardPosition::new(File::H, Rank::Eight).into()).unwrap();
+    game.board.spawn_piece(Piece::Rook(Color::White), &BoardPosition::new(File::H, Rank::Two).into()).unwrap();
+    game.board.spawn_piece(Piece::Queen(Color::White), &BoardPosition::new(File::A, Rank::One).into()).unwrap();
+
+    println!("{:?}", game);
+
+    let result = game.move_piece(&BoardPosition::new(File::A, Rank::One), &BoardPosition::new(File::H, Rank::Eight));
+    println!("{:?}", game);
+    assert!(result.is_ok());
+    assert_eq!(game.get_game_state(), GameState::GameOver(Color::White));
 }
