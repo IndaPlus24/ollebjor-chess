@@ -18,6 +18,20 @@ impl Board {
         }
     }
 
+    pub fn get_rank(&self, rank: Rank) -> [Option<Piece>; BOARD_SIZE] {
+        let y = usize::from(rank);
+        self.piece_array[(7usize).abs_diff(y)]
+    }
+
+    pub fn get_file(&self, file: File) -> [Option<Piece>; BOARD_SIZE] {
+        let x = usize::from(file);
+        let mut file_array = [None; BOARD_SIZE];
+        for (y, rank) in self.piece_array.iter().enumerate() {
+            file_array[(7usize).abs_diff(y)] = rank[x];
+        }
+        file_array
+    }
+    
     /// returns a reference to the piece in the specified position
     pub fn get_piece_ref(&self, position: &Position) -> &Option<Piece> {
         &self.piece_array[(7usize).abs_diff(position.y)][position.x]
@@ -64,6 +78,16 @@ impl Board {
             }
         }
         self.piece_array[(7usize).abs_diff(position.y)][position.x] = None;
+    }
+
+    ///Moves the piece from the start position to the end position
+    /// If there is a piece in the end position, it is removed
+    pub fn move_piece(&mut self, from: &Position, to: &Position) {
+        if let Some(piece) = self.get_piece(from) {
+            self.despawn_piece(to);
+            self.set_piece(piece, to);
+            self.despawn_piece(from);
+        }
     }
 
     ///Clears the board of all pieces
