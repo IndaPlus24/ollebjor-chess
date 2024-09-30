@@ -4,7 +4,7 @@ use olle_chess::*;
 use olle_chess::position::*;
 
 fn get_initial_position() -> Position {
-    Position::new(3, 3).unwrap() // Sample position at D4
+    Position::new(3, 3) // Sample position at D4
 }
 
 fn print_legal_moves(piece: Piece, position: &BoardPosition) {
@@ -41,6 +41,6 @@ fn test_legal_moves_visualization() {
     ];
 
     for piece in pieces {
-        print_legal_moves(piece, &position.into());
+        print_legal_moves(piece, &position.try_into().unwrap());
     }
 }

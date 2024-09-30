@@ -23,7 +23,7 @@ fn test_board_initialization() {
 #[test]
 fn test_spawn_piece_on_empty_square() {
     let mut board = Board::new();
-    let position = Position::new(3, 4).unwrap();
+    let position = Position::new(3, 4);
     let piece = sample_piece();
 
     assert!(board.spawn_piece(piece, &position).is_ok());
@@ -33,7 +33,7 @@ fn test_spawn_piece_on_empty_square() {
 #[test]
 fn test_spawn_piece_on_occupied_square() {
     let mut board = Board::new();
-    let position = Position::new(3, 4).unwrap();
+    let position = Position::new(3, 4);
     let piece1 = sample_piece();
     let piece2 = sample_piece();
 
@@ -47,7 +47,7 @@ fn test_spawn_piece_on_occupied_square() {
 #[test]
 fn test_set_piece() {
     let mut board = Board::new();
-    let position = Position::new(3, 4).unwrap();
+    let position = Position::new(3, 4);
     let piece = sample_piece();
 
     board.set_piece(piece, &position);
@@ -57,7 +57,7 @@ fn test_set_piece() {
 #[test]
 fn test_despawn_piece() {
     let mut board = Board::new();
-    let position = Position::new(3, 4).unwrap();
+    let position = Position::new(3, 4);
     let piece = sample_piece();
 
     board.spawn_piece(piece, &position).unwrap();
@@ -73,7 +73,7 @@ fn test_clear_board() {
 
     for x in 0..board::BOARD_SIZE {
         for y in 0..board::BOARD_SIZE {
-            let position = Position::new(x, y).unwrap();
+            let position = Position::new(x, y);
             board.set_piece(piece, &position);
         }
     }
@@ -82,7 +82,7 @@ fn test_clear_board() {
 
     for x in 0..board::BOARD_SIZE {
         for y in 0..board::BOARD_SIZE {
-            let position = Position::new(x, y).unwrap();
+            let position = Position::new(x, y);
             assert!(board.get_piece(&position).is_none());
         }
     }
@@ -91,7 +91,7 @@ fn test_clear_board() {
 #[test]
 fn test_get_piece_ref() {
     let mut board = Board::new();
-    let position = Position::new(3, 4).unwrap();
+    let position = Position::new(3, 4);
     let piece = sample_piece();
 
     board.spawn_piece(piece, &position).unwrap();
