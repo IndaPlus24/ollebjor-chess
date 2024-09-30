@@ -37,18 +37,19 @@ impl From<Rank> for usize {
     }
 }
 
-impl From<usize> for Rank {
-    fn from(value: usize) -> Self {
+impl TryFrom<usize> for Rank {
+    type Error = ChessError;
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
         match value {
-            0 => One, 
-            1 => Two,
-            2 => Three, 
-            3 => Four, 
-            4 => Five, 
-            5 => Six, 
-            6 => Seven,
-            7 => Eight,
-            _ => panic!()
+            0 => Ok(One), 
+            1 => Ok(Two),
+            2 => Ok(Three), 
+            3 => Ok(Four), 
+            4 => Ok(Five), 
+            5 => Ok(Six), 
+            6 => Ok(Seven),
+            7 => Ok(Eight),
+            _ => Err(ChessError::InvalidRank),
         }
     }
 }
@@ -68,18 +69,19 @@ impl From<Rank> for char {
     }
 }
 
-impl From<char> for Rank {
-    fn from(value: char) -> Self {
+impl TryFrom<char> for Rank {
+    type Error = ChessError;
+    fn try_from(value: char) -> Result<Self, Self::Error> {
         match value {
-            '1' => One, 
-            '2' => Two,
-            '3' => Three,
-            '4' => Four, 
-            '5' => Five, 
-            '6' => Six, 
-            '7' => Seven,
-            '8' => Eight,
-            _ => panic!()
+            '1' => Ok(One),
+            '2' => Ok(Two),
+            '3' => Ok(Three),
+            '4' => Ok(Four),
+            '5' => Ok(Five),
+            '6' => Ok(Six),
+            '7' => Ok(Seven),
+            '8' => Ok(Eight),
+            _ => Err(ChessError::InvalidRank),
         }
     }
 }
@@ -111,18 +113,19 @@ impl From<File> for usize {
     }
 }
 
-impl From<usize> for File {
-    fn from(value: usize) -> File{
+impl TryFrom<usize> for File {
+    type Error = ChessError;
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
         match value {
-            0 => A, 
-            1 => B,
-            2 => C,
-            3 => D, 
-            4 => E, 
-            5 => F, 
-            6 => G,
-            7 => H,
-            _ => panic!()
+            0 => Ok(A), 
+            1 => Ok(B),
+            2 => Ok(C),
+            3 => Ok(D), 
+            4 => Ok(E), 
+            5 => Ok(F), 
+            6 => Ok(G),
+            7 => Ok(H),
+            _ => Err(ChessError::InvalidFile)
         }
     }
 }
@@ -142,18 +145,19 @@ impl From<File> for char {
     }
 }
 
-impl From<char> for File {
-    fn from(value: char) -> Self {
+impl TryFrom<char> for File {
+    type Error = ChessError;
+    fn try_from(value: char) -> Result<Self, Self::Error> {
         match value {
-            'A' => A, 
-            'B' => B,
-            'C' => C,
-            'D' => D, 
-            'E' => E, 
-            'F' => F, 
-            'G' => G,
-            'H' => H,
-            _ => panic!()
+            'A' => Ok(A), 
+            'B' => Ok(B),
+            'C' => Ok(C),
+            'D' => Ok(D), 
+            'E' => Ok(E), 
+            'F' => Ok(F), 
+            'G' => Ok(G),
+            'H' => Ok(H),
+            _ => Err(ChessError::InvalidFile)
         }
     }
 }
@@ -183,69 +187,78 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn new(x: usize, y: usize) -> Result<Self, ChessError> {
-        if x > 7 || y > 7 {
-            return Err(ChessError::OutOfBounds);
-        }
-
-        Ok(Position {
+    pub fn new(x: usize, y: usize) -> Self {
+        Position {
             x,
             y,
-        })
+        }
     }
 }
 
 
 impl From<BoardPosition> for Position {
-    fn from(value: BoardPosition) -> Self {
+    fn from(value: BoardPosition) -> Position {
         Position { 
-            x: value.file.into(), 
-            y: value.rank.into()
+            x: usize::from(value.file), 
+            y: usize::from(value.rank)
         }
     }
 }
+
 impl From<&BoardPosition> for Position {
-    fn from(value: &BoardPosition) -> Self {
+    fn from(value: &BoardPosition) -> Position {
         Position { 
-            x: value.file.into(), 
-            y: value.rank.into()
+            x: usize::from(value.file), 
+            y: usize::from(value.rank)
         }
     }
 }
 
-impl From<Position> for BoardPosition {
-    fn from(value: Position) -> Self {
-        BoardPosition {
-            file: File::from(value.x),
-            rank: Rank::from(value.y) 
-        }
+impl TryFrom<Position> for BoardPosition {
+    type Error = ChessError;
+    fn try_from(value: Position) -> Result<Self, Self::Error> {
+        Ok(BoardPosition {
+            file: File::try_from(value.x)?,
+            rank: Rank::try_from(value.y)?
+        })
     }
 }
 
-impl From<&Position> for BoardPosition {
-    fn from(value: &Position) -> Self {
-        BoardPosition {
-            file: File::from(value.x),
-            rank: Rank::from(value.y) 
-        }
+impl TryFrom<&Position> for BoardPosition {
+    type Error = ChessError;
+    fn try_from(value: &Position) -> Result<Self, Self::Error> {
+        Ok(BoardPosition {
+            file: File::try_from(value.x)?,
+            rank: Rank::try_from(value.y)?
+        })
     }
 }
 
-impl From<&str> for BoardPosition {
-    fn from(value: &str) -> Self {
+impl TryFrom<(usize, usize)> for BoardPosition {
+    type Error = ChessError;
+    fn try_from(value: (usize, usize)) -> Result<Self, Self::Error> {
+        Ok(BoardPosition {
+            file: File::try_from(value.0)?,
+            rank: Rank::try_from(value.1)?
+        })
+    }
+}
+
+impl TryFrom<&str> for BoardPosition {
+    type Error = ChessError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         let value = value.trim().to_uppercase();
 
         if value.len() != 2 {
-            panic!("POSITION STRING IS NOT 2 LONG")
+            return Err(ChessError::InvalidPositionString);
         }
-        println!("str is: {value}");
+
         let mut chars = value.chars();
-        let file = chars.next().unwrap_or('Ö');
-        let rank = chars.next().unwrap_or('Ö');
-        
-        println!("{:?} {:?}", file, rank);
-        println!("{:?}", BoardPosition::new(file.into(), rank.into()));
-        BoardPosition::new(file.into(), rank.into())
+        let file = chars.next().ok_or(ChessError::InvalidPositionString)?;
+        let rank = chars.next().ok_or(ChessError::InvalidPositionString)?;
+
+        Ok(BoardPosition::new(File::try_from(file)?, Rank::try_from(rank)?))
     }
 }
 
@@ -253,7 +266,7 @@ impl From<&str> for BoardPosition {
 impl Mul<usize> for Position {
     type Output = Position;
     fn mul(self, rhs: usize) -> Self::Output {
-        Position::new(self.x * rhs, self.y * rhs).unwrap()
+        Position::new(self.x * rhs, self.y * rhs)
     }
 }
 

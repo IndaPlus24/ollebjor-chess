@@ -10,14 +10,14 @@ fn test_rank_conversion_usize() {
 
 #[test]
 fn test_rank_conversion_from_usize() {
-    assert_eq!(Rank::from(0), Rank::One);
-    assert_eq!(Rank::from(7), Rank::Eight);
+    assert_eq!(Rank::try_from(0).unwrap(), Rank::One);
+    assert_eq!(Rank::try_from(7).unwrap(), Rank::Eight);
 }
 
 #[test]
 #[should_panic]
 fn test_rank_conversion_invalid_usize() {
-    let _ = Rank::from(8);  // This should panic
+    let _ = Rank::try_from(8).unwrap();  // This should panic
 }
 
 #[test]
@@ -28,14 +28,14 @@ fn test_file_conversion_usize() {
 
 #[test]
 fn test_file_conversion_from_usize() {
-    assert_eq!(File::from(0), File::A);
-    assert_eq!(File::from(7), File::H);
+    assert_eq!(File::try_from(0).unwrap(), File::A);
+    assert_eq!(File::try_from(7).unwrap(), File::H);
 }
 
 #[test]
 #[should_panic]
 fn test_file_conversion_invalid_usize() {
-    let _ = File::from(8);  // This should panic
+    let _ = File::try_from(8).unwrap();  // This should panic
 }
 
 #[test]
@@ -47,21 +47,16 @@ fn test_board_position_new() {
 
 #[test]
 fn test_position_new_valid() {
-    let position = Position::new(3, 5).unwrap();
+    let position = Position::new(3, 5);
     assert_eq!(position.x, 3);
     assert_eq!(position.y, 5);
 }
 
-#[test]
-fn test_position_new_out_of_bounds() {
-    assert!(Position::new(8, 5).is_err());
-    assert!(Position::new(3, 8).is_err());
-}
 
 #[test]
 fn test_position_to_board_position() {
-    let pos = Position::new(3, 5).unwrap();
-    let board_pos: BoardPosition = pos.into();
+    let pos = Position::new(3, 5);
+    let board_pos: BoardPosition = pos.try_into().unwrap();
     assert_eq!(board_pos.file, File::D);
     assert_eq!(board_pos.rank, Rank::Six);
 }
@@ -76,14 +71,14 @@ fn test_board_position_to_position() {
 
 #[test]
 fn test_board_position_from_str() {
-    let board_pos: BoardPosition = "E2".into();
+    let board_pos: BoardPosition = BoardPosition::try_from("E2").unwrap();
     assert_eq!(board_pos.file, File::E);
     assert_eq!(board_pos.rank, Rank::Two);
 }
 
 #[test]
 fn test_position_multiplication() {
-    let pos = Position::new(2, 3).unwrap();
+    let pos = Position::new(2, 3);
     let result = pos * 2;
     assert_eq!(result.x, 4);
     assert_eq!(result.y, 6);

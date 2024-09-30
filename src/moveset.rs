@@ -60,7 +60,7 @@ impl Move {
            if x < min || x > max || y < min || y > max {
                Err(ChessError::OutOfBounds)
            } else {
-           Ok(Position::new(x as usize, y as usize).unwrap())
+           Ok(Position::new(x as usize, y as usize))
            }
         }
     }

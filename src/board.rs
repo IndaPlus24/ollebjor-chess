@@ -129,7 +129,7 @@ impl fmt::Display for Board {
         for (y, rank) in self.piece_array.iter().enumerate() {
             write!(f, "\n")?;
             for (x, _file) in rank.iter().enumerate() {
-                let pos: BoardPosition = Position::new(x, (7usize).abs_diff(y)).unwrap().into();
+                let pos: BoardPosition = Position::new(x, (7usize).abs_diff(y)).try_into().unwrap();
                 write!(f, " {pos:?}")?;
             }
         }

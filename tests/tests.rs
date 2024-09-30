@@ -7,7 +7,7 @@ use position::*;
 
 fn setup_empty_at_e5(piece: Piece) -> Game {
     let mut game = Game::empty();
-    game.board.spawn_piece(piece, &BoardPosition::from("E5").into()).expect("could not spawn piece!");
+    game.board.spawn_piece(piece, &BoardPosition::try_from("E5").unwrap().into()).unwrap();
     return  game;
 }
 
@@ -34,7 +34,7 @@ fn white_is_first() {
 #[test]
 fn board_position_from_rank_and_file_equals_board_position_from_position() {
     let bp1 = BoardPosition::new( File::B, Rank::Seven);
-    let bp2 = BoardPosition::from(Position::new(1, 6).unwrap());
+    let bp2 = BoardPosition::try_from(Position::new(1, 6)).unwrap();
     println!("{:?},{:?}", bp1, bp2);
     assert_eq!(bp1,bp2);
 }

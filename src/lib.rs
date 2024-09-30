@@ -6,7 +6,7 @@ pub mod board;
 pub mod moveset;
 use board::*;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Hash, Eq)]
 pub enum GameState {
     ///Game is in progress, the next player can make a move
     InProgress,
@@ -33,7 +33,7 @@ impl Color {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum Piece {
     Pawn(Color),
     Knight(Color),
@@ -89,6 +89,12 @@ pub enum ChessError {
     OutOfBounds,
     /// Occurs when trying to promote to an illegal piece
     PromotionError(String),
+    /// Occurs when trying to access a file that does not exist
+    InvalidFile,
+    /// Occurs when trying to access a rank that does not exist
+    InvalidRank,
+    /// Occurs when trying to access a position that does not exist
+    InvalidPositionString
 }
 
 /// Game
@@ -120,7 +126,7 @@ impl Game {
     pub fn init(&mut self) {
         // Vita pjäser
         let color = Color::Black;
-        let mut position = Position::new(0, 7).unwrap();
+        let mut position = Position::new(0, 7);
         let piece_array = [
             Rook(color),
             Knight(color),
@@ -140,7 +146,7 @@ impl Game {
             position.x += 1;
         }
         // Flytta ned ett steg
-        position = Position::new(0, 6).unwrap();
+        position = Position::new(0, 6);
 
         // Vita bondlurkar
         for _ in 1..=8 {
@@ -152,7 +158,7 @@ impl Game {
 
         // Svarta pjäser
         let color = Color::White;
-        position = Position::new(0, 0).unwrap();
+        position = Position::new(0, 0);
         let piece_array = [
             Rook(color),
             Knight(color),
@@ -173,7 +179,7 @@ impl Game {
         }
 
         // Flytta upp ett steg
-        position = Position::new(0, 1).unwrap();
+        position = Position::new(0, 1);
 
         // svarta bondlurkar
         for _ in 1..=8 {
@@ -254,7 +260,7 @@ impl Game {
             for (i, p) in rank_array.iter().enumerate() {
                 if let Some(p) = p {
                     if can_promote(*p) {
-                        return Some(BoardPosition::new(File::from(i), rank));
+                        return Some(BoardPosition::new(File::try_from(i).expect("expected number 0 to 7"), rank));
                     }
                 }
             }
@@ -270,9 +276,9 @@ impl Game {
         }
 
         //Check for check
-        self.state = if self.is_check(&self.board.white_king_position.unwrap().into()) {
+        self.state = if self.is_check(&self.board.white_king_position.unwrap().try_into().unwrap()) {
             GameState::Check
-        } else if self.is_check(&self.board.black_king_position.unwrap().into()) {
+        } else if self.is_check(&self.board.black_king_position.unwrap().try_into().unwrap()) {
             GameState::Check
         } else {
             self.state
@@ -331,12 +337,12 @@ impl Game {
                                 break 'step;
                             } else {
                                 //push then break
-                                legal_moves.push(next_step.into());
+                                legal_moves.push(next_step.try_into().unwrap());
                                 break 'step;
                             }
                         } else {
                             //Push this step
-                            legal_moves.push(next_step.into());
+                            legal_moves.push(next_step.try_into().unwrap());
                         }
                     } else {
                         break 'step;
@@ -385,6 +391,10 @@ impl Game {
             }
         }
         return false;
+    }
+
+    pub fn get_piece(&self, position: &BoardPosition) -> Option<Piece> {
+        self.board.get_piece(&position.into())
     }
 }
 
