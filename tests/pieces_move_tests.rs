@@ -3,32 +3,32 @@ use olle_chess::*;
 // use olle_chess::board::*;
 use olle_chess::position::*;
 
-fn get_initial_position() -> Position {
-    Position::new(3, 3) // Sample position at D4
-}
-
 fn print_legal_moves(piece: Piece, position: &BoardPosition) {
     let mut game = Game::empty();
-
+    //spawn kings to avoid checkmate
+    game.board.spawn_piece(Piece::King(Color::White), &Position::new(0, 0)).unwrap();
+    game.board.spawn_piece(Piece::King(Color::Black), &Position::new(7, 7)).unwrap();
+    
     println!("\nLegal moves for {:?} at position {:?}:", piece, position);
-
+    
     // Placera pjäsen på startpositionen
     game.board.spawn_piece(piece, &position.into()).unwrap();
-    println!("{}", game.board);
+    game.visualize_legal_moves(position);
+    // println!("{}", game.board);
 
-    // Gå igenom varje drag i movesetet och räkna upp möjliga positioner
-    if let Some(moves) = game.get_possible_moves(position) {
-        for bp in moves {
-            println!("Move {:?} -> {:?}", position, bp);
-        }
-    }
+    // // Gå igenom varje drag i movesetet och räkna upp möjliga positioner
+    // if let Some(moves) = game.get_possible_moves(position) {
+    //     for bp in moves {
+    //         println!("Move {:?} -> {:?}", position, bp);
+    //     }
+    // }
 
     println!("\n--------------------------\n");
 }
 
 #[test]
 fn test_legal_moves_visualization() {
-    let position = get_initial_position();
+    let position = BoardPosition::try_from((3,3)).unwrap();
 
     // Test för varje typ av pjäs
     let pieces = vec![
@@ -41,6 +41,6 @@ fn test_legal_moves_visualization() {
     ];
 
     for piece in pieces {
-        print_legal_moves(piece, &position.try_into().unwrap());
+        print_legal_moves(piece, &position);
     }
 }

@@ -204,3 +204,17 @@ fn test_winning_works() {
     assert!(result.is_ok());
     assert_eq!(game.get_game_state(), GameState::GameOver(Color::White));
 }
+
+#[test]
+fn test_is_check_works_ok(){
+    let mut game = Game::new();
+
+    println!("{:?}", game);
+
+    let r = game.move_piece(&BoardPosition::new(File::B, Rank::One), &BoardPosition::new(File::D, Rank::Three));
+
+    print!("{:?}", r);
+
+    println!("{:?}", game);
+    assert_eq!(game.get_game_state(), GameState::InProgress);
+}

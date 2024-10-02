@@ -26,6 +26,8 @@ pub enum Move {
     KnightDownLeft,
     KnightLeftDown,
     Forward(Color),
+    ForwardLeft(Color),
+    ForwardRight(Color),
 }
 
 impl Move {
@@ -55,7 +57,19 @@ impl Move {
             match color {
                 Color::Black => (x, y-steps as i8),
                 Color::White => (x, y+steps as i8),
-            }
+            },
+            ForwardLeft(color) => {
+                match color {
+                    Color::Black => (x+steps as i8, y-steps as i8),
+                    Color::White => (x-steps as i8, y+steps as i8),
+                }
+            },
+            ForwardRight(color) => {
+                match color {
+                    Color::Black => (x-steps as i8, y-steps as i8),
+                    Color::White => (x+steps as i8, y+steps as i8),
+                }
+            },
            };
            if x < min || x > max || y < min || y > max {
                Err(ChessError::OutOfBounds)

@@ -1,3 +1,4 @@
+use moveset::Move;
 use std::fmt;
 use Piece::*;
 pub mod position;
@@ -94,7 +95,7 @@ pub enum ChessError {
     /// Occurs when trying to access a rank that does not exist
     InvalidRank,
     /// Occurs when trying to access a position that does not exist
-    InvalidPositionString
+    InvalidPositionString,
 }
 
 /// Game
@@ -197,14 +198,16 @@ impl Game {
         from: &BoardPosition,
         to: &BoardPosition,
     ) -> Result<GameState, ChessError> {
+        self.evaluate_and_set_game_state();
+
         if let GameState::GameOver(_) = self.state {
             return Err(ChessError::GameAlreadyOver);
         }
-        if self.board.get_piece(&from.into()).is_none() {
-            return Err(ChessError::NoPiece);
-        }
         if let GameState::Promotion(_) = self.state {
             return Err(ChessError::PromotionError("Must promote pawn".to_string()));
+        }
+        if self.board.get_piece(&from.into()).is_none() {
+            return Err(ChessError::NoPiece);
         }
 
         //Get the possible moves for the piece
@@ -214,11 +217,10 @@ impl Game {
                 //Move the piece
                 self.board.move_piece(&from.into(), &to.into());
                 //Change the turn
-                self.turn = self.turn.other();
+                self.change_turn();
                 //Evaluate the game state
-                self.evaluate_game_state();
-
-                return Ok(self.state);
+                self.evaluate_and_set_game_state();
+                return Ok(self.get_game_state());
             } else {
                 return Err(ChessError::IllegalMove);
             }
@@ -227,66 +229,137 @@ impl Game {
         Err(ChessError::IllegalMove)
     }
 
-    /// Updates the internal game state by checking for 
-    /// * Win
-    /// * Promotion
-    /// * Check
-    
-    fn evaluate_game_state(&mut self) -> GameState {
-
+    fn is_won(&mut self) -> bool {
         //Check for win
         if self.board.black_king_position.is_none() {
-            self.state = GameState::GameOver(Color::White);
-            return self.state;
-        }else if self.board.white_king_position.is_none() {
-            self.state = GameState::GameOver(Color::Black);
-            return self.state;
+            return true;
+        } else if self.board.white_king_position.is_none() {
+            return true;
+        } else {
+            return false;
         }
+    }
 
-        //Check for promotion
-        let rank_eight = self.board.get_rank(Rank::Eight);
-        let rank_one = self.board.get_rank(Rank::One);
-
+    //Checks if the current player can promote a pawn
+    fn get_promotion_position(&self) -> Option<BoardPosition> {
         //function that returns the position of the first pawn that can be promoted
-        fn get_promotion_position(rank_array: &[Option<Piece>], rank: Rank) -> Option<BoardPosition> {
-            let can_promote = |piece: Piece| {
-                match piece {
-                    Pawn(Color::White) => true,
-                    Pawn(Color::Black) => true,
-                    _ => false,
-                }
+        fn get_promotion_position(
+            rank_array: &[Option<Piece>],
+            rank: Rank,
+        ) -> Option<BoardPosition> {
+            let can_promote = |piece: Piece| match piece {
+                Pawn(Color::White) => true,
+                Pawn(Color::Black) => true,
+                _ => false,
             };
 
             for (i, p) in rank_array.iter().enumerate() {
                 if let Some(p) = p {
                     if can_promote(*p) {
-                        return Some(BoardPosition::new(File::try_from(i).expect("expected number 0 to 7"), rank));
+                        return Some(BoardPosition::new(
+                            File::try_from(i).expect("expected number 0 to 7"),
+                            rank,
+                        ));
                     }
                 }
             }
             None
         }
 
-        if let Some(promotion_position) = get_promotion_position(&rank_eight, Rank::Eight) {
-            self.state = GameState::Promotion(promotion_position);
+        //Check for promotion
+        let rank_eight = self.board.get_rank(Rank::Eight);
+        let rank_one = self.board.get_rank(Rank::One);
+
+        match self.turn {
+            Color::Black => get_promotion_position(&rank_eight, Rank::Eight),
+            Color::White => get_promotion_position(&rank_one, Rank::One),
+        }
+    }
+
+    /// Checks if any player can promote a pawn
+    fn is_promotion(&self) -> bool {
+        if let Some(_) = self.get_promotion_position() {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /// Checks if the current player is in check
+    fn is_check(&mut self) -> bool {
+        //Get the position of the king of the current player
+        let king_position = match self.turn {
+            Color::White => self.board.white_king_position.unwrap(),
+            Color::Black => self.board.black_king_position.unwrap(),
+        };
+
+        let mut pieces_to_check = self.board.get_all_pieces_of_color(self.turn.other());
+        pieces_to_check.dedup();
+
+        let king_in_check_by = |piece: &Piece| {
+            let moves_for_piece = moveset::get_moveset(*piece);
+
+            for action in moves_for_piece.moves {
+                'step: for step in 1..=moves_for_piece.steps {
+                    let next_position = action.get_position(&king_position, step);
+
+                    //if next_position is Ok, get the piece on that position
+                    if let Ok(next_step) = next_position {
+                        //Get the piece on this step
+                        if let Some(p) = self.board.get_piece(&next_step) {
+                            if p == *piece && p.get_color() == self.turn.other() {
+                                return true;
+                            } else {
+                                break 'step;
+                            }
+                        }
+                    } else {
+                        break 'step;
+                    }
+                }
+            }
+            return false;
+        };
+
+        if pieces_to_check.iter().any(|p| king_in_check_by(p)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    fn change_turn(&mut self) {
+        self.turn = self.turn.other();
+    }
+
+    /// Updates the internal game state by checking for
+    /// * Win
+    /// * Promotion
+    /// * Check
+
+    fn evaluate_and_set_game_state(&mut self) -> GameState {
+        //check if the game is won
+        if self.is_won() {
+            self.state = GameState::GameOver(self.turn);
             return self.state;
-        } else if let Some(promotion_position) = get_promotion_position(&rank_one, Rank::One) {
-            self.state = GameState::Promotion(promotion_position);
+        }
+
+        //Check for promotion
+        if self.is_promotion() {
+            self.state = GameState::Promotion(self.get_promotion_position().unwrap());
             return self.state;
         }
 
         //Check for check
-        self.state = if self.is_check(&self.board.white_king_position.unwrap().try_into().unwrap()) {
-            GameState::Check
-        } else if self.is_check(&self.board.black_king_position.unwrap().try_into().unwrap()) {
-            GameState::Check
+        if self.is_check() {
+            return self.state;
         } else {
-            self.state
-        };
-        self.state
+            self.state = GameState::InProgress;
+            return self.state;
+        }
     }
-    
-    /// Promotes the pawn at the game state promotions position to the new piece. 
+
+    /// Promotes the pawn at the game state promotions position to the new piece.
     /// Returns the new game state or a chess error explaining why the promotion failed.
     pub fn promote_pawn(&mut self, new_piece: Piece) -> Result<GameState, ChessError> {
         //Checks to see if the game state is promotion
@@ -297,15 +370,13 @@ impl Game {
                 other => {
                     return Err(ChessError::PromotionError(format!(
                         "Cannot promote to pawn at {:?} to {:?}",
-                        pawn_position,
-                        other
+                        pawn_position, other
                     )));
                 }
-                
             }
             //Promote the pawn
             self.board.set_piece(new_piece, &pawn_position.into());
-            self.evaluate_game_state();
+            self.evaluate_and_set_game_state();
             return Ok(self.state);
         } else {
             return Err(ChessError::PromotionError("No pawn to promote".to_string()));
@@ -332,6 +403,32 @@ impl Game {
                     let next_position = move_action.get_position(&position.into(), step);
 
                     if let Ok(next_step) = next_position {
+                        if let Move::ForwardLeft(_) = move_action {
+                            if let Some(p) = self.board.get_piece(&next_step) {
+                                if p.get_color() == piece.get_color().other() {
+                                    legal_moves.push(next_step.try_into().unwrap());
+                                    break 'step;
+                                } else {
+                                    break 'step;
+                                }
+                            } else {
+                                break 'step;
+                            }
+                        }
+
+                        if let Move::ForwardRight(_) = move_action {
+                            if let Some(p) = self.board.get_piece(&next_step) {
+                                if p.get_color() == piece.get_color().other() {
+                                    legal_moves.push(next_step.try_into().unwrap());
+                                    break 'step;
+                                } else {
+                                    break 'step;
+                                }
+                            } else {
+                                break 'step;
+                            }
+                        }
+
                         if let Some(p) = self.board.get_piece(&next_step) {
                             if p.get_color() == piece.get_color() {
                                 break 'step;
@@ -353,7 +450,15 @@ impl Game {
             let current_piece = self.board.get_piece(&position.into()).unwrap();
             self.board.despawn_piece(&position.into());
             //Keep all moves that does not put current player in check
-            legal_moves.retain(|&x| !self.is_check(&x));
+            legal_moves.retain(|&x| {
+                //move the pice to the new position
+                self.board.set_piece(current_piece, &x.into());
+                //Check if the player is in check
+                let keep = !self.is_check();
+                //Remove the piece from the new position
+                self.board.despawn_piece(&x.into());
+                keep
+            });
             //Put the piece back on the board
             self.board.set_piece(current_piece, &position.into());
             return Some(legal_moves);
@@ -361,40 +466,33 @@ impl Game {
         None
     }
 
-    /// Check if the current player is in check based on the given position.
-    fn is_check(&self, position: &BoardPosition) -> bool {
-        //Check all the possible moves for all other pieces from the given position.
+    pub fn get_piece(&self, position: &BoardPosition) -> Option<Piece> {
+        self.board.get_piece(&position.into())
+    }
 
-        //Get all pieces of the other color and dedup them so we only check each pieces moves once
-        //This means we wont have to check the color later
-        let mut pieces_to_check = self.board.get_all_pieces_of_color(self.turn.other());
-        pieces_to_check.dedup();
-        //For each piece, check if the piece of that type is in the possible moves
-        for piece in pieces_to_check {
-            let moves_for_piece = moveset::get_moveset(*piece);
-
-            for action in moves_for_piece.moves {
-                for step in 1..=moves_for_piece.steps {
-                    let next_position = action.get_position(&position.into(), step);
-
-                    //If there is a piece of the right variant in the possible moves, return true
-                    if let Ok(next_step) = next_position {
-                        //Get the piece on this step
-                        if let Some(p) = self.board.get_piece(&next_step) {
-                            //HELP should this be reference instead or will it not work cuz they are pointing to different blocks of memory?
-                            if p == *piece {
-                                return true;
-                            }
-                        }
+    pub fn visualize_legal_moves(&mut self, position: &BoardPosition) {
+        if let Some(piece) = self.get_piece(position) {
+            println!("Legal moves for {:?} at position {:?}:", piece, position);
+        } else {
+            println!("No piece at position {:?}", position);
+            return;
+        }
+        if let Some(moves) = self.get_possible_moves(position) {
+            for (y, rank) in self.board.piece_array.iter().enumerate() {
+                print!("\n");
+                for (x, _file) in rank.iter().enumerate() {
+                    let pos: BoardPosition =
+                        Position::new(x, (7usize).abs_diff(y)).try_into().unwrap();
+                    if moves.contains(&pos) {
+                        print!(" {pos:?}");
+                    } else {
+                        print!("  *");
                     }
                 }
             }
+            print!("\n")
         }
-        return false;
-    }
-
-    pub fn get_piece(&self, position: &BoardPosition) -> Option<Piece> {
-        self.board.get_piece(&position.into())
+        println!("\n--------------------------\n");
     }
 }
 
