@@ -1,5 +1,3 @@
-use std::result;
-
 use olle_chess::*;
 use position::*;
 

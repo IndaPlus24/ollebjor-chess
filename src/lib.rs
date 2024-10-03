@@ -1,5 +1,4 @@
-use moveset::Move;
-use std::{fmt, future::Future};
+use std::fmt;
 use Piece::*;
 pub mod position;
 use position::*;

@@ -5,12 +5,6 @@ use position::*;
 
 // Detta är mina egna tests som är lite sämre....
 
-fn setup_empty_at_e5(piece: Piece) -> Game {
-    let mut game = Game::empty();
-    game.board.spawn_piece(piece, &BoardPosition::try_from("E5").unwrap().into()).unwrap();
-    return  game;
-}
-
 fn setup_empty_with_kings() -> Game {
     let mut game = Game::empty();
     game.board.spawn_piece(Piece::King(Color::White), &BoardPosition::new(File::E, Rank::One).into()).unwrap();
