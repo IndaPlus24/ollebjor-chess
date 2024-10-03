@@ -8,6 +8,7 @@ fn print_legal_moves(piece: Piece, position: &BoardPosition) {
     //spawn kings to avoid checkmate
     game.board.spawn_piece(Piece::King(Color::White), &Position::new(0, 0)).unwrap();
     game.board.spawn_piece(Piece::King(Color::Black), &Position::new(7, 7)).unwrap();
+    game.board.spawn_piece(Piece::Bishop(Color::Black), &Position::new(5, 5)).unwrap();
     
     println!("\nLegal moves for {:?} at position {:?}:", piece, position);
     

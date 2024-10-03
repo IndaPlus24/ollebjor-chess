@@ -85,8 +85,8 @@ impl Board {
     pub fn move_piece(&mut self, from: &Position, to: &Position) {
         if let Some(piece) = self.get_piece(from) {
             self.despawn_piece(to);
-            self.set_piece(piece, to);
             self.despawn_piece(from);
+            self.set_piece(piece, to);
         }
     }
 

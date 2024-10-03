@@ -11,6 +11,13 @@ fn setup_empty_at_e5(piece: Piece) -> Game {
     return  game;
 }
 
+fn setup_empty_with_kings() -> Game {
+    let mut game = Game::empty();
+    game.board.spawn_piece(Piece::King(Color::White), &BoardPosition::new(File::E, Rank::One).into()).unwrap();
+    game.board.spawn_piece(Piece::King(Color::Black), &BoardPosition::new(File::E, Rank::Eight).into()).unwrap();
+    return game;
+}
+
 // check test framework
 #[test]
 fn it_works() {
@@ -21,7 +28,7 @@ fn it_works() {
 // check that game state is in progress after initialisation
 #[test]
 fn game_in_progress_after_init() {
-    let game = Game::new();
+    let mut game = Game::new();
     assert_eq!(game.get_game_state(), GameState::InProgress);
 }
 
@@ -55,11 +62,11 @@ fn move_set_is_some() {
 
 #[test]
 fn test_moveset_for_pawn_works_is_right() {
-    let mut game = Game::empty();
+    let mut game = setup_empty_with_kings();
     game.board.spawn_piece(Piece::Pawn(Color::White), &BoardPosition::new(File::B, Rank::Two).into()).unwrap();
 
-    let bp1 = BoardPosition::new(File::B, Rank::Two);
-    let bp2 = BoardPosition::new(File::B, Rank::Three);
+    let bp1 = BoardPosition::new(File::A, Rank::Two);
+    let bp2 = BoardPosition::new(File::A, Rank::Three);
 
     println!("{:?}", game);
     if let Some(moves) = game.get_possible_moves(&bp1){
@@ -73,11 +80,13 @@ fn test_moveset_for_pawn_works_is_right() {
 
 #[test]
 fn test_moveset_for_white_pawn() {
-    let mut game = setup_empty_at_e5(Piece::Pawn(Color::White));
-
+    let mut game = setup_empty_with_kings();
+    
     let bp1 = BoardPosition::new(File::E, Rank::Five);
     let bp2 = BoardPosition::new(File::E, Rank::Six);
-
+    
+    game.board.spawn_piece(Piece::Pawn(Color::White), &bp1.into()).unwrap();
+    
     let moves = game.get_possible_moves(&bp1).unwrap_or(vec![]);
     println!("pawn move from {:?} to {:?}", bp1, bp2);
     assert!(moves == vec![bp2])
@@ -158,10 +167,8 @@ fn test_turn_is_switched_after_move() {
 #[test]
 fn test_promotion_works() {
 
-    let mut game = Game::empty();
+    let mut game = setup_empty_with_kings();
     game.board.spawn_piece(Piece::Pawn(Color::White), &BoardPosition::new(File::A, Rank::Seven).into()).unwrap();
-    game.board.spawn_piece(Piece::King(Color::White), &BoardPosition::new(File::H, Rank::One).into()).unwrap();
-    game.board.spawn_piece(Piece::King(Color::Black), &BoardPosition::new(File::H, Rank::Eight).into()).unwrap();
 
     println!("{:?}", game);
 
@@ -179,10 +186,11 @@ fn test_promotion_works() {
 
     //Promote to Queen
     let result = game.promote_pawn(Piece::Queen(Color::White));
+    println!("{:?}", game);
+    println!("game state: {:?}", game.get_game_state());
     assert!(result.is_ok());
     assert_eq!(game.get_game_state(), GameState::Check);
 
-    println!("{:?}", game);
 
     //Move black king -> ok
     let result = game.move_piece(&BoardPosition::new(File::H, Rank::Eight), &BoardPosition::new(File::H, Rank::Seven));

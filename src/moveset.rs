@@ -31,7 +31,7 @@ pub enum Move {
 }
 
 impl Move {
-    pub fn get_position(&self, position: &Position, steps: usize) -> Result<Position, ChessError> {
+    pub fn get_position(&self, position: &Position, steps: usize) -> Option<Position> {
         let (max, min) = (7, 0);
         let x = position.x as i8;
         let y = position.y as i8;
@@ -72,9 +72,9 @@ impl Move {
             },
            };
            if x < min || x > max || y < min || y > max {
-               Err(ChessError::OutOfBounds)
+               None
            } else {
-           Ok(Position::new(x as usize, y as usize))
+           Some(Position::new(x as usize, y as usize))
            }
         }
     }
@@ -107,4 +107,16 @@ pub fn get_moveset(piece: Piece) -> Moveset {
         Queen(_) => Moveset::new(7, vec![Up, Down, Left, Right, UpRight, UpLeft, DownRight, DownLeft], false),
         King(_) => Moveset::new(1, vec![Up, Down, Left, Right, UpRight, UpLeft, DownRight, DownLeft], false),
     }
+}
+
+pub fn get_steps(from: &Position, move_action: &Move, steps: usize) -> Vec<Position> {
+    let mut positions = Vec::new();
+    for step in 1..=steps {
+        if let Some(position) = move_action.get_position(from, step) {
+            positions.push(position);
+        }else {
+            break;
+        }
+    }
+    positions
 }
