@@ -48,14 +48,13 @@ fn test_pawn_can_move_straight_forward_one_step() {
    // White Pawn
    let mut game = setup_empty_with_kings();
    game.board.spawn_piece(Piece::Pawn(Color::White), &BoardPosition::new(File::E, Rank::Two).into()).unwrap();
+   game.board.spawn_piece(Piece::Pawn(Color::Black), &BoardPosition::new(File::E, Rank::Seven).into()).unwrap();
 
    let result = game.move_piece(&BoardPosition::new(File::E, Rank::Two), &BoardPosition::new(File::E, Rank::Three)); 
    println!("Result after white pawn move: {:?}", result);
    assert!(result.is_ok());
 
    // Black Pawn
-   let mut game = setup_empty_with_kings();
-   game.board.spawn_piece(Piece::Pawn(Color::Black), &BoardPosition::new(File::E, Rank::Seven).into()).unwrap();
    let result = game.move_piece(&BoardPosition::new(File::E, Rank::Seven), &BoardPosition::new(File::E, Rank::Six)); 
    println!("Result after black pawn move: {:?}", result);
    assert!(result.is_ok());

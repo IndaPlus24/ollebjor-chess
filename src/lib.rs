@@ -410,12 +410,17 @@ impl Game {
             self.board.despawn_piece(&position.into());
             //Keep all moves that does not put current player in check
             legal_moves.retain(|&x| {
-                //move the pice to the new position
+                // remove the piece from the new position
+                let other_piece = self.board.take_piece(&x.into());
+                //move the piece to the new position
                 self.board.set_piece(current_piece, &x.into());
                 //Check if the player is in check
                 let keep = !self.is_check();
                 //Remove the piece from the new position
                 self.board.despawn_piece(&x.into());
+                if other_piece.is_some() {
+                    self.board.set_piece(other_piece.unwrap(), &x.into());
+                }
                 keep
             });
             //Put the piece back on the board

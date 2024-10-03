@@ -65,6 +65,12 @@ impl Board {
         self.get_piece_ref(position)
     }
 
+    pub fn take_piece(&mut self, position: &Position) -> Option<Piece> {
+        let piece = self.get_piece(position);
+        self.despawn_piece(position);
+        piece
+    }
+
     ///Removes the piece from the specified location
     /// If it is the king, the king position is also removed
     pub fn despawn_piece(&mut self, position: &Position) {

@@ -28,14 +28,14 @@ fn it_works() {
 // check that game state is in progress after initialisation
 #[test]
 fn game_in_progress_after_init() {
-    let mut game = Game::new();
+    let game = Game::new();
     assert_eq!(game.get_game_state(), GameState::InProgress);
 }
 
 #[test]
 fn white_is_first() {
     let game = Game::new();
-    assert_eq!(game.turn, Color::White);
+    assert_eq!(game.get_turn(), Color::White);
 }
 
 #[test]
@@ -103,7 +103,8 @@ fn board_is_facing_right_direction(){
 
 #[test]
 fn test_piece_actually_moves() {
-    let mut game = setup_empty_at_e5(Piece::Pawn(Color::White));
+    let mut game = setup_empty_with_kings();
+    game.board.spawn_piece(Piece::Pawn(Color::White), &BoardPosition::new(File::E, Rank::Five).into()).unwrap();
 
     let bp1 = BoardPosition::new(File::E, Rank::Five);
     let bp2 = BoardPosition::new(File::E, Rank::Six);
@@ -154,19 +155,18 @@ fn test_turn_is_switched_after_move() {
     //Move King to D1 -> error -> turn should not change
     let result = game.move_piece(&BoardPosition::new(File::E, Rank::One), &BoardPosition::new(File::D, Rank::One));
     assert!(result.is_err());
-    assert_eq!(game.turn, Color::White);
+    assert_eq!(game.get_turn(), Color::White);
     println!("{:?}", game);
 
     //Move King to D2 -> ok -> turn should change
     let result = game.move_piece(&BoardPosition::new(File::E, Rank::One), &BoardPosition::new(File::D, Rank::Two));
     assert!(result.is_ok());
-    assert_eq!(game.turn, Color::Black);
+    assert_eq!(game.get_turn(), Color::Black);
     println!("{:?}", game);
 }
 
 #[test]
 fn test_promotion_works() {
-
     let mut game = setup_empty_with_kings();
     game.board.spawn_piece(Piece::Pawn(Color::White), &BoardPosition::new(File::A, Rank::Seven).into()).unwrap();
 
@@ -178,10 +178,10 @@ fn test_promotion_works() {
     assert_eq!(game.get_game_state(), GameState::Promotion(BoardPosition::new(File::A, Rank::Eight)));    
 
     //Try to move black king -> error
-    let result = game.move_piece(&BoardPosition::new(File::H, Rank::Eight), &BoardPosition::new(File::H, Rank::Seven));
+    let result = game.move_piece(&BoardPosition::new(File::E, Rank::Eight), &BoardPosition::new(File::E, Rank::Seven));
     assert!(result.is_err());
-    //Turn has changed but white still needs to promote
-    assert_eq!(game.turn, Color::Black);
+    //Turn has not change, so we know white is the one to chose promotion
+    assert_eq!(game.get_turn(), Color::White);
     assert_eq!(game.get_game_state(), GameState::Promotion(BoardPosition::new(File::A, Rank::Eight)));
 
     //Promote to Queen
@@ -193,7 +193,8 @@ fn test_promotion_works() {
 
 
     //Move black king -> ok
-    let result = game.move_piece(&BoardPosition::new(File::H, Rank::Eight), &BoardPosition::new(File::H, Rank::Seven));
+    let result = game.move_piece(&BoardPosition::new(File::E, Rank::Eight), &BoardPosition::new(File::E, Rank::Seven));
+    println!("{:?}", game);
     assert!(result.is_ok());
 }
 
@@ -206,9 +207,9 @@ fn test_winning_works() {
     game.board.spawn_piece(Piece::Queen(Color::White), &BoardPosition::new(File::A, Rank::One).into()).unwrap();
 
     println!("{:?}", game);
-
     let result = game.move_piece(&BoardPosition::new(File::A, Rank::One), &BoardPosition::new(File::H, Rank::Eight));
     println!("{:?}", game);
+    
     assert!(result.is_ok());
     assert_eq!(game.get_game_state(), GameState::GameOver(Color::White));
 }
